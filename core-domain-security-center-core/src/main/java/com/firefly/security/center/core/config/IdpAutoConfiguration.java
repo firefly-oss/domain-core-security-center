@@ -16,7 +16,7 @@
 
 package com.firefly.security.center.core.config;
 
-import com.firefly.idp.adapter.IdpAdapter;
+import org.fireflyframework.idp.adapter.IdpAdapter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

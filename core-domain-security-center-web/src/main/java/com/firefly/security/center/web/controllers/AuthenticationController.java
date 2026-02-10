@@ -16,9 +16,9 @@
 
 package com.firefly.security.center.web.controllers;
 
-import com.firefly.idp.dtos.IntrospectionResponse;
-import com.firefly.idp.dtos.LoginRequest;
-import com.firefly.idp.dtos.RefreshRequest;
+import org.fireflyframework.idp.dtos.IntrospectionResponse;
+import org.fireflyframework.idp.dtos.LoginRequest;
+import org.fireflyframework.idp.dtos.RefreshRequest;
 import com.firefly.security.center.core.services.AuthenticationService;
 import com.firefly.security.center.core.services.AuthenticationService.AuthLogoutRequest;
 import com.firefly.security.center.core.services.AuthenticationService.AuthenticationResponse;

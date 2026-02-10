@@ -19,7 +19,7 @@ package com.firefly.security.center.core.services;
 import com.firefly.core.customer.sdk.api.EmailContactsApi;
 import com.firefly.core.customer.sdk.api.PartiesApi;
 import com.firefly.core.customer.sdk.model.*;
-import com.firefly.idp.dtos.UserInfoResponse;
+import org.fireflyframework.idp.dtos.UserInfoResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

@@ -16,7 +16,7 @@
 
 package com.firefly.security.center.core.impl;
 
-import com.firefly.common.cache.manager.FireflyCacheManager;
+import org.fireflyframework.cache.manager.FireflyCacheManager;
 import com.firefly.security.center.core.services.SessionAggregationService;
 import com.firefly.security.center.interfaces.dtos.SessionContextDTO;
 import com.firefly.security.center.interfaces.dtos.SessionMetadataDTO;

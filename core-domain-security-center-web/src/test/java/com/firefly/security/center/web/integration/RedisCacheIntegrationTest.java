@@ -20,7 +20,7 @@ import com.firefly.core.contract.sdk.model.ContractDTO;
 import com.firefly.core.contract.sdk.model.ContractPartyDTO;
 import com.firefly.core.contract.sdk.model.PaginationResponseContractPartyDTO;
 import com.firefly.core.customer.sdk.model.*;
-import com.firefly.idp.dtos.LoginRequest;
+import org.fireflyframework.idp.dtos.LoginRequest;
 import com.redis.testcontainers.RedisContainer;
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 import lombok.extern.slf4j.Slf4j;

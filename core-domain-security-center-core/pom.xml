@@ -58,48 +58,42 @@
 
         <!-- Firefly Common Cache Library -->
         <dependency>
-            <groupId>com.firefly</groupId>
-            <artifactId>lib-common-core</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <groupId>org.fireflyframework</groupId>
+            <artifactId>fireflyframework-core</artifactId>
         </dependency>
 
         <!-- Firefly Common Cache Library -->
         <dependency>
-            <groupId>com.firefly</groupId>
-            <artifactId>lib-common-cache</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <groupId>org.fireflyframework</groupId>
+            <artifactId>fireflyframework-cache</artifactId>
         </dependency>
 
         <!-- Firefly IDP Adapter -->
         <dependency>
-            <groupId>com.firefly</groupId>
-            <artifactId>lib-idp</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <groupId>org.fireflyframework</groupId>
+            <artifactId>fireflyframework-idp</artifactId>
         </dependency>
         
         <!-- Firefly IDP Keycloak Implementation -->
         <dependency>
-            <groupId>com.firefly</groupId>
-            <artifactId>lib-idp-keycloak-impl</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <groupId>org.fireflyframework</groupId>
+            <artifactId>fireflyframework-idp-keycloak</artifactId>
             <scope>runtime</scope>
               <!-- Optional - only loaded if provider=keycloak -->
         </dependency>
 
         <!-- Firefly IDP AWS Cognito Implementation -->
         <dependency>
-            <groupId>com.firefly</groupId>
-            <artifactId>lib-idp-aws-cognito-impl</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <groupId>org.fireflyframework</groupId>
+            <artifactId>fireflyframework-idp-aws-cognito</artifactId>
             <scope>runtime</scope>
             <optional>true</optional>  <!-- Optional - only loaded if provider=cognito -->
         </dependency>
 
         <!-- Firefly IDP Internal Database Implementation -->
         <dependency>
-            <groupId>com.firefly</groupId>
-            <artifactId>lib-idp-internal-db-impl</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <groupId>org.fireflyframework</groupId>
+            <artifactId>fireflyframework-idp-internal-db</artifactId>
             <scope>runtime</scope>
             <optional>true</optional>  <!-- Optional - only loaded if provider=internal-db -->
         </dependency>

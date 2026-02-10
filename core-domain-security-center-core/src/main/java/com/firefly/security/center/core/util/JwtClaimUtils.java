@@ -1,7 +1,7 @@
 package com.firefly.security.center.core.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.firefly.idp.dtos.enums.UserRoleEnum;
+import org.fireflyframework.idp.dtos.enums.UserRoleEnum;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;

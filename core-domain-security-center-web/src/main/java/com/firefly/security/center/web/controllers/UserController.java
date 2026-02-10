@@ -1,7 +1,7 @@
 package com.firefly.security.center.web.controllers;
 
-import com.firefly.idp.dtos.CreateUserRequest;
-import com.firefly.idp.dtos.CreateUserResponse;
+import org.fireflyframework.idp.dtos.CreateUserRequest;
+import org.fireflyframework.idp.dtos.CreateUserResponse;
 import com.firefly.security.center.core.services.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

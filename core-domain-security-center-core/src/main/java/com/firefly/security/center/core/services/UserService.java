@@ -1,8 +1,8 @@
 package com.firefly.security.center.core.services;
 
-import com.firefly.idp.adapter.IdpAdapter;
-import com.firefly.idp.dtos.CreateUserRequest;
-import com.firefly.idp.dtos.CreateUserResponse;
+import org.fireflyframework.idp.adapter.IdpAdapter;
+import org.fireflyframework.idp.dtos.CreateUserRequest;
+import org.fireflyframework.idp.dtos.CreateUserResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

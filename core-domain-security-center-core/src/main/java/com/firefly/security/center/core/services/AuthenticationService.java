@@ -16,8 +16,8 @@
 
 package com.firefly.security.center.core.services;
 
-import com.firefly.idp.adapter.IdpAdapter;
-import com.firefly.idp.dtos.*;
+import org.fireflyframework.idp.adapter.IdpAdapter;
+import org.fireflyframework.idp.dtos.*;
 import com.firefly.security.center.session.FireflySessionManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

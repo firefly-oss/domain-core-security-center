@@ -16,7 +16,7 @@
 
 package com.firefly.security.center.core.services;
 
-import com.firefly.idp.dtos.UserInfoResponse;
+import org.fireflyframework.idp.dtos.UserInfoResponse;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
