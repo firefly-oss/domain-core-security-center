@@ -1,9 +1,9 @@
 # Firefly Security Center
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Java](https://img.shields.io/badge/Java-21+-orange.svg)](https://openjdk.java.net/)
+[![Java](https://img.shields.io/badge/Java-25+-orange.svg)](https://openjdk.java.net/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-green.svg)](https://spring.io/projects/spring-boot)
-[![Tests](https://img.shields.io/badge/Tests-20%2F20%20Passing-brightgreen.svg)](#test-coverage)
+[![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen.svg)](#test-coverage)
 
 **Centralized session management and security orchestration for the Firefly Core Banking Platform**
 
@@ -36,12 +36,12 @@ The Security Center acts as the **single source of truth** for user sessions acr
 
 ### Key Capabilities
 
-- **🔐 Multi-IDP Support** - Switch between Keycloak and AWS Cognito via configuration
-- **📦 Session Enrichment** - Aggregates data from customer-mgmt, contract-mgmt, product-mgmt, and reference-master-data
-- **⚡ High Performance** - Caffeine-backed caching with optional Redis support
-- **🔄 Reactive Architecture** - Non-blocking, built on Spring WebFlux and Project Reactor with Java 21 Virtual Threads
-- **🔌 Exportable Library** - Other services import `FireflySessionManager` for session access
-- **✅ Production Ready** - 100% test coverage with Testcontainers
+- **Multi-IDP Support** - Switch between Keycloak, AWS Cognito, or Internal Database via configuration
+- **Session Enrichment** - Aggregates data from customer-mgmt, contract-mgmt, product-mgmt, and reference-master-data
+- **High Performance** - Caffeine-backed caching with optional Redis support
+- **Reactive Architecture** - Non-blocking, built on Spring WebFlux and Project Reactor with Java 25 Virtual Threads
+- **Exportable Library** - Other services import `FireflySessionManager` for session access
+- **Production Ready** - Comprehensive test coverage with Testcontainers
 
 ### Who Uses It
 
@@ -64,7 +64,7 @@ The Security Center is the **authentication and session orchestration hub** for 
 │   User      │
 │  (Browser)  │
 └──────┬──────┘
-       │ 1. POST /login
+       │ 1. POST /api/v1/auth/login
        │    {username, password}
        ▼
 ┌─────────────────────────────────────────────────────────┐
@@ -91,7 +91,7 @@ The Security Center is the **authentication and session orchestration hub** for 
 │  └────────────────────────────────────────────────┘     │
 │                      ↓                                  │
 │  ┌────────────────────────────────────────────────┐     │
-│  │ 5. Create SessionContext                       │     │
+│  │ 5. Create SessionContextDTO                    │     │
 │  │    - Customer info                             │     │
 │  │    - Active contracts                          │     │
 │  │    - Products                                  │     │
@@ -122,23 +122,27 @@ The Security Center doesn't care which identity provider you use. It uses an ada
 
 ```java
 public interface IdpAdapter {
-    Mono<TokenResponse> login(LoginRequest request);
-    Mono<TokenResponse> refreshToken(String refreshToken);
-    Mono<Void> logout(String accessToken, String refreshToken);
-    Mono<UserInfoResponse> getUserInfo(String accessToken);
+    Mono<ResponseEntity<TokenResponse>> login(LoginRequest request);
+    Mono<ResponseEntity<TokenResponse>> refresh(RefreshRequest request);
+    Mono<Void> logout(LogoutRequest request);
+    Mono<ResponseEntity<UserInfoResponse>> getUserInfo(String accessToken);
+    Mono<ResponseEntity<IntrospectionResponse>> introspect(String accessToken);
+    Mono<Void> resetPassword(String userName);
+    Mono<ResponseEntity<CreateUserResponse>> createUser(CreateUserRequest request);
 }
 ```
 
 **Available Adapters:**
-- `KeycloakIdpAdapter` - For Keycloak (OIDC/OAuth 2.0)
+- `IdpAdapterImpl` (Keycloak) - For Keycloak (OIDC/OAuth 2.0)
 - `CognitoIdpAdapter` - For AWS Cognito
+- `InternalDbIdpAdapter` - For internal database authentication
 
 **Switching IDPs:** Just change one configuration property:
 ```yaml
 firefly:
   security-center:
     idp:
-      provider: keycloak  # or cognito
+      provider: keycloak  # or cognito, internal-db
 ```
 
 #### 2. **Session Enrichment with Real SDKs**
@@ -148,17 +152,17 @@ The Security Center uses **OpenAPI-generated SDK clients** to call downstream mi
 ```java
 @Service
 public class SessionAggregationService {
-    private final CustomerResolverService customerResolver;
-    private final ContractResolverService contractResolver;
+    private final CustomerResolverService customerResolverService;
+    private final ContractResolverService contractResolverService;
 
-    public Mono<SessionContext> aggregateSession(UUID partyId) {
+    public Mono<SessionContextDTO> aggregateSessionContext(UUID partyId) {
         // Parallel calls to downstream services
-        Mono<CustomerInfo> customer = customerResolver.resolveCustomerInfo(partyId);
-        Mono<List<ContractInfo>> contracts = contractResolver.resolveActiveContracts(partyId);
-
-        return Mono.zip(customer, contracts)
-            .map(tuple -> SessionContext.builder()
-                .customer(tuple.getT1())
+        return Mono.zip(
+            customerResolverService.resolveCustomerInfo(partyId),
+            contractResolverService.resolveActiveContracts(partyId)
+        ).map(tuple -> SessionContextDTO.builder()
+                .partyId(partyId)
+                .customerInfo(tuple.getT1())
                 .activeContracts(tuple.getT2())
                 .build());
     }
@@ -178,33 +182,35 @@ The Security Center maps IDP users to Firefly partyIds using the customer-mgmt S
 ```java
 @Service
 public class DefaultUserMappingService implements UserMappingService {
-    private final PartiesApi partiesApi;
-    private final EmailContactsApi emailContactsApi;
+    private final PartiesApi partiesApi;           // from customer-mgmt SDK
+    private final EmailContactsApi emailContactsApi; // from customer-mgmt SDK
 
     public Mono<UUID> mapToPartyId(UserInfoResponse userInfo, String username) {
         // 1. Try email lookup
-        if (userInfo.getEmail() != null) {
+        if (userInfo.getEmail() != null && !userInfo.getEmail().isBlank()) {
             return findPartyByEmail(userInfo.getEmail())
                 .onErrorResume(error -> {
-                    // 2. Try username lookup
-                    if (username != null) {
-                        return findPartyByUsername(username);
+                    // 2. Try username lookup (falls back to preferredUsername if username is null)
+                    String usernameToUse = username != null ? username : userInfo.getPreferredUsername();
+                    if (usernameToUse != null) {
+                        return findPartyByUsername(usernameToUse);
                     }
                     // 3. No fallback - party MUST exist
                     return Mono.error(new IllegalStateException(
                         "No party found for IDP user. Party must exist before authentication."));
                 });
         }
-        return findPartyByUsername(username);
+        // If no email, try username or preferredUsername
+        return findPartyByUsername(username != null ? username : userInfo.getPreferredUsername());
     }
 }
 ```
 
 **Mapping Strategy:**
-- ✅ Email-based lookup: Searches all parties' email contacts
-- ✅ Username-based lookup: Searches parties by `sourceSystem` field (format: `"idp:username"`)
-- ✅ **No fallbacks**: Authentication fails if party not found
-- ✅ **Data consistency**: Ensures all sessions have valid partyIds
+- Email-based lookup: Searches all parties' email contacts
+- Username-based lookup: Searches parties by `sourceSystem` field (format: `"idp:username"`)
+- **No fallbacks**: Authentication fails if party not found
+- **Data consistency**: Ensures all sessions have valid partyIds
 
 **Important**: Parties must exist in customer-mgmt before users can authenticate. This ensures data consistency across all microservices.
 
@@ -213,9 +219,9 @@ public class DefaultUserMappingService implements UserMappingService {
 The Security Center follows a **fail-fast** approach with proper error propagation:
 
 ```java
-public Mono<CustomerInfo> resolveCustomerInfo(UUID partyId) {
-    return partiesApi.getPartyById(partyId)
-        .flatMap(party -> enrichCustomerInfo(party))
+public Mono<CustomerInfoDTO> resolveCustomerInfo(UUID partyId) {
+    return partiesApi.getPartyById(partyId, UUID.randomUUID().toString())
+        .flatMap(this::enrichCustomerInfo)
         .doOnError(error ->
             log.error("Failed to fetch customer info for partyId: {}", partyId, error));
     // Errors propagate to caller - no fallbacks
@@ -223,11 +229,11 @@ public Mono<CustomerInfo> resolveCustomerInfo(UUID partyId) {
 ```
 
 **Error Handling Principles:**
-- ✅ All errors propagate to the API layer
-- ✅ Clear error messages for debugging
-- ✅ No silent failures or placeholder data
-- ✅ HTTP 500 returned with error details
-- ⚠️ Ensure downstream services are available for authentication to succeed
+- All errors propagate to the API layer
+- Clear error messages for debugging
+- No silent failures or placeholder data
+- HTTP 500 returned with error details
+- Ensure downstream services are available for authentication to succeed
 
 #### 5. **High-Performance Caching**
 
@@ -284,10 +290,10 @@ public class AccountService {
 ```
 
 **Benefits:**
-- ✅ Type-safe session access
-- ✅ No HTTP overhead
-- ✅ Shared cache across all services
-- ✅ Consistent authorization logic
+- Type-safe session access
+- No HTTP overhead
+- Shared cache across all services
+- Consistent authorization logic
 
 ---
 
@@ -330,8 +336,8 @@ The Security Center uses a **layered, modular architecture** with clear separati
                      ▼
             ┌─────────────────┐
             │ Redis Cache     │
-            │ (lib-common-    │
-            │     cache)      │
+            │ (fireflyframe-  │
+            │  work-cache)    │
             └─────────────────┘
 ```
 
@@ -342,7 +348,7 @@ core-domain-security-center/
 ├── core-domain-security-center-interfaces/
 │   └── DTOs and data contracts
 │
-├── core-domain-security-center-session/      ⭐ EXPORTABLE
+├── core-domain-security-center-session/      EXPORTABLE
 │   └── FireflySessionManager interface
 │       (Imported by all other microservices)
 │
@@ -365,7 +371,7 @@ core-domain-security-center/
 
 **1. Authentication Flow:**
 ```
-User → POST /login → IDP Adapter → IDP (Keycloak/Cognito)
+User → POST /api/v1/auth/login → IDP Adapter → IDP (Keycloak/Cognito)
   ↓
 Tokens (access, refresh, ID)
   ↓
@@ -379,7 +385,7 @@ Parallel Enrichment:
   │         ├─→ Reference Data: Fetch role scopes (permissions)
   │         └─→ Product Management: Fetch product info
   ↓
-Aggregate into SessionContext
+Aggregate into SessionContextDTO
   ↓
 Cache in Redis with TTL
   ↓
@@ -388,7 +394,7 @@ Return session to client
 
 **2. Session Retrieval (from other services):**
 ```
-Microservice → FireflySessionManager.getSession()
+Microservice → FireflySessionManager.createOrGetSession(exchange)
   ↓
 Check Redis cache
   ├─→ Hit: Return cached session
@@ -401,16 +407,20 @@ The Security Center uses a **pluggable adapter pattern** for identity providers:
 
 ```java
 public interface IdpAdapter {
-    Mono<AuthResponse> authenticate(String username, String password);
-    Mono<AuthResponse> refreshToken(String refreshToken);
-    Mono<Void> logout(String accessToken, String refreshToken);
-    Mono<UserInfo> getUserInfo(String accessToken);
+    Mono<ResponseEntity<TokenResponse>> login(LoginRequest request);
+    Mono<ResponseEntity<TokenResponse>> refresh(RefreshRequest request);
+    Mono<Void> logout(LogoutRequest request);
+    Mono<ResponseEntity<UserInfoResponse>> getUserInfo(String accessToken);
+    Mono<ResponseEntity<IntrospectionResponse>> introspect(String accessToken);
+    Mono<Void> resetPassword(String userName);
+    Mono<ResponseEntity<CreateUserResponse>> createUser(CreateUserRequest request);
 }
 ```
 
 **Implementations:**
-- `KeycloakIdpAdapter` - For Keycloak (OIDC/OAuth 2.0)
+- `IdpAdapterImpl` (Keycloak) - For Keycloak (OIDC/OAuth 2.0)
 - `CognitoIdpAdapter` - For AWS Cognito
+- `InternalDbIdpAdapter` - For internal database authentication
 
 **Selection:** Configured via `firefly.security-center.idp.provider` property.
 
@@ -424,7 +434,7 @@ This guide will walk you through setting up and running the Security Center micr
 
 Before you begin, ensure you have:
 
-- **Java 21+** - [Download OpenJDK](https://openjdk.org/)
+- **Java 25+** - [Download OpenJDK](https://openjdk.org/)
 - **Maven 3.8+** - [Download Maven](https://maven.apache.org/download.cgi)
 - **Docker** (optional) - For running Keycloak locally
 - **Git** - To clone the repository
@@ -439,7 +449,7 @@ cd core-domain-security-center
 # Build the project (runs all tests)
 mvn clean install
 
-# ✅ Expected: BUILD SUCCESS with 20/20 tests passing
+# Expected: BUILD SUCCESS
 ```
 
 **Note:** The Cognito integration test is disabled by default (requires LocalStack Pro license). See [Test Coverage](#aws-cognito-integration-test-disabled) for details.
@@ -591,12 +601,12 @@ curl -X POST http://localhost:8085/api/v1/auth/login \
   "idToken": "eyJhbGci...",
   "tokenType": "Bearer",
   "expiresIn": 300,
-  "sessionId": "550e8400-e29b-41d4-a716-446655440000",
+  "sessionId": "session_123e4567-e89b-12d3-a456-426614174000_1698350040000",
   "partyId": "123e4567-e89b-12d3-a456-426614174000"
 }
 ```
 
-✅ **Success!** Your Security Center is running with Keycloak authentication.
+**Success!** Your Security Center is running with Keycloak authentication.
 
 ---
 
@@ -758,7 +768,7 @@ Parallel Enrichment:
     │           ├─→ Fetch role and permissions
     │           └─→ Fetch product information
     ↓
-Aggregate into SessionContext
+Aggregate into SessionContextDTO
     ↓
 Cache in Redis/Caffeine
     ↓
@@ -818,7 +828,24 @@ server:
 - `POST /api/v1/auth/login` - Authenticate user and create session
 - `POST /api/v1/auth/refresh` - Refresh access token
 - `POST /api/v1/auth/logout` - Logout and invalidate session
-- `GET /api/v1/auth/session/{sessionId}` - Retrieve session details
+- `POST /api/v1/auth/introspect` - Introspect/validate an access token
+- `POST /api/v1/auth/reset-password` - Trigger IDP password reset for a user
+
+### Session Management
+
+- `POST /api/v1/sessions` - Create or get session (from X-Party-Id header)
+- `GET /api/v1/sessions/{sessionId}` - Retrieve session by session ID
+- `GET /api/v1/sessions/party/{partyId}` - Retrieve session by party ID
+- `DELETE /api/v1/sessions/{sessionId}` - Invalidate a session
+- `DELETE /api/v1/sessions/party/{partyId}` - Invalidate all sessions for a party
+- `POST /api/v1/sessions/{sessionId}/refresh` - Refresh session data
+- `GET /api/v1/sessions/{sessionId}/validate` - Validate session is active
+- `GET /api/v1/sessions/access-check` - Check product access for a party
+- `GET /api/v1/sessions/permission-check` - Check specific permission for a party
+
+### User Management
+
+- `POST /api/v1/users` - Create a new user in the IDP
 
 ### Health
 
@@ -841,9 +868,11 @@ curl -X POST http://localhost:8085/api/v1/auth/login \
 {
   "accessToken": "eyJhbGci...",
   "refreshToken": "eyJhbGci...",
-  "sessionId": "550e8400-e29b-41d4-a716-446655440000",
-  "partyId": "123e4567-e89b-12d3-a456-426614174000",
-  "expiresIn": 3600
+  "idToken": "eyJhbGci...",
+  "tokenType": "Bearer",
+  "expiresIn": 3600,
+  "sessionId": "session_123e4567-e89b-12d3-a456-426614174000_1698350040000",
+  "partyId": "123e4567-e89b-12d3-a456-426614174000"
 }
 ```
 
@@ -911,19 +940,19 @@ public class AccountController {
 ## Test Coverage
 
 ```
-✅ Total: 20/20 tests passing (100%)
-├── Core Module:                     8/8  ✅
-│   ├── ContractResolverServiceTest: 4/4  ✅
-│   └── CustomerResolverServiceTest: 4/4  ✅
+├── Core Module:
+│   ├── ContractResolverServiceTest: 8 tests
+│   └── CustomerResolverServiceTest: 9 tests
 │
-└── Web Module:                     12/12 ✅
-    ├── Keycloak Integration:        8/8  ✅
-    ├── Redis Cache Integration:     9/9  ✅
-    └── Controller Tests:            4/4  ✅
+└── Web Module:
+    ├── AuthenticationControllerIntegrationTest: 4 tests
+    ├── KeycloakIntegrationTest:  7 tests (@Disabled - requires Docker)
+    ├── RedisCacheIntegrationTest: 9 tests (@Disabled - requires Docker)
+    └── CognitoIntegrationTest:   6 tests (@Disabled - requires LocalStack Pro)
 ```
 
 **Technologies Used:**
-- Testcontainers (Keycloak, Redis)
+- Testcontainers (Keycloak, Redis, LocalStack)
 - JUnit 5, AssertJ, Mockito
 
 ### Running Tests
@@ -976,7 +1005,7 @@ The `CognitoIntegrationTest` is **disabled by default** because it requires a **
 
 | Document | Description |
 |----------|-------------|
-| **[Getting Started Guide](docs/GETTING_STARTED.md)** | 📘 **START HERE** - Comprehensive setup guide with Docker, Kubernetes, and integration examples |
+| **[Getting Started Guide](docs/GETTING_STARTED.md)** | **START HERE** - Comprehensive setup guide with Docker, Kubernetes, and integration examples |
 | **[Architecture](docs/ARCHITECTURE.md)** | System design, module structure, data flow |
 | **[Configuration](docs/CONFIGURATION.md)** | IDP, cache, and service configuration |
 | **[API Reference](docs/API.md)** | REST API endpoints and examples |
@@ -986,7 +1015,7 @@ The `CognitoIntegrationTest` is **disabled by default** because it requires a **
 
 ## Technology Stack
 
-- **Java 21** - With Virtual Threads enabled
+- **Java 25** - With Virtual Threads enabled
 - **Spring Boot 3.x** - Application framework
 - **Spring WebFlux** - Reactive web
 - **Project Reactor** - Reactive streams

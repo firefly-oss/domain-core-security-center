@@ -22,17 +22,17 @@ This comprehensive guide will help you set up, configure, and run the Security C
 
 In a microservices architecture, **authentication and authorization** become complex:
 
-- ❌ Each service authenticating users independently (duplicated logic)
-- ❌ Inconsistent session management across services
-- ❌ Repeated calls to identity providers (performance bottleneck)
-- ❌ No centralized view of user permissions
+- Each service authenticating users independently (duplicated logic)
+- Inconsistent session management across services
+- Repeated calls to identity providers (performance bottleneck)
+- No centralized view of user permissions
 
 **The Security Center solves this by:**
 
-- ✅ Centralizing authentication with pluggable IDP adapters
-- ✅ Enriching sessions with customer, contract, and product data
-- ✅ Caching sessions for fast access across all services
-- ✅ Providing a shared library (`FireflySessionManager`) for session access
+- Centralizing authentication with pluggable IDP adapters
+- Enriching sessions with customer, contract, and product data
+- Caching sessions for fast access across all services
+- Providing a shared library (`FireflySessionManager`) for session access
 
 ### Core Responsibilities
 
@@ -47,7 +47,7 @@ In a microservices architecture, **authentication and authorization** become com
 
 ### System Requirements
 
-- **Java**: 17 or higher (OpenJDK recommended)
+- **Java**: 25 or higher (OpenJDK recommended)
 - **Maven**: 3.8 or higher
 - **Memory**: Minimum 2GB RAM for running the service
 - **Disk**: 500MB for dependencies and build artifacts
@@ -75,9 +75,9 @@ mvn clean install -pl core-domain-security-center-web
 **Expected Output:**
 ```
 [INFO] BUILD SUCCESS
-[INFO] Total time: 55.643 s
-[INFO] Tests run: 20, Failures: 0, Errors: 0, Skipped: 6
+[INFO] Total time: ~55 s
 ```
+Note: Some integration tests (Keycloak, Redis, Cognito) are @Disabled by default and require Docker or LocalStack Pro.
 
 ---
 
@@ -128,7 +128,7 @@ services:
 #### Step 2: Create Dockerfile
 
 ```dockerfile
-FROM eclipse-temurin:17-jdk-alpine
+FROM eclipse-temurin:25-jdk-alpine
 WORKDIR /app
 COPY core-domain-security-center-web/target/*.jar app.jar
 EXPOSE 8085
@@ -267,9 +267,11 @@ curl -X POST http://localhost:8085/api/v1/auth/login \
 {
   "accessToken": "eyJhbGci...",
   "refreshToken": "eyJhbGci...",
-  "sessionId": "550e8400-e29b-41d4-a716-446655440000",
-  "partyId": "123e4567-e89b-12d3-a456-426614174000",
-  "expiresIn": 300
+  "idToken": "eyJhbGci...",
+  "tokenType": "Bearer",
+  "expiresIn": 300,
+  "sessionId": "session_123e4567-e89b-12d3-a456-426614174000_1698350040000",
+  "partyId": "123e4567-e89b-12d3-a456-426614174000"
 }
 ```
 
@@ -574,16 +576,21 @@ public class AccountController {
 
 #### Step 4: Understanding the Session Object
 
-The `SessionContext` object contains:
+The `SessionContextDTO` object contains:
 
 ```java
-public class SessionContext {
+public class SessionContextDTO {
     private String sessionId;              // Unique session ID
     private UUID partyId;                  // Customer's party ID
-    private CustomerInfoDTO customer;      // Customer profile
+    private CustomerInfoDTO customerInfo;  // Customer profile
     private List<ContractInfoDTO> activeContracts;  // Active contracts
-    private Instant createdAt;             // Session creation time
-    private Instant expiresAt;             // Session expiration time
+    private LocalDateTime createdAt;       // Session creation time
+    private LocalDateTime lastAccessedAt;  // Last access time
+    private LocalDateTime expiresAt;       // Session expiration time
+    private String ipAddress;              // Client IP address
+    private String userAgent;              // User agent string
+    private SessionStatus status;          // ACTIVE, EXPIRED, INVALIDATED, LOCKED
+    private SessionMetadataDTO metadata;   // Additional metadata
 }
 ```
 
@@ -593,11 +600,17 @@ Each `ContractInfoDTO` contains:
 public class ContractInfoDTO {
     private UUID contractId;
     private String contractNumber;
-    private String status;
+    private String contractStatus;
     private ProductInfoDTO product;        // Product details
     private RoleInfoDTO roleInContract;    // User's role
-    private Instant startDate;
-    private Instant endDate;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
+    private UUID contractPartyId;
+    private LocalDateTime dateJoined;
+    private LocalDateTime dateLeft;
+    private Boolean isActive;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }
 ```
 
@@ -679,10 +692,9 @@ Save the `accessToken` and `sessionId` from the response.
 #### 2. Get Session Details
 
 ```bash
-SESSION_ID="550e8400-e29b-41d4-a716-446655440000"
+SESSION_ID="session_123e4567-e89b-12d3-a456-426614174000_1698350040000"
 
-curl -X GET "http://localhost:8085/api/v1/sessions/${SESSION_ID}" \
-  -H "Authorization: Bearer ${ACCESS_TOKEN}" | jq
+curl -X GET "http://localhost:8085/api/v1/sessions/${SESSION_ID}" | jq
 ```
 
 #### 3. Refresh Token

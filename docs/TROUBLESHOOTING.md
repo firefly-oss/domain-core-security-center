@@ -11,7 +11,7 @@
 BeanDefinitionOverrideException: Invalid bean definition with name 'redisConnectionFactory'
 ```
 
-**Cause:** Spring Boot's `RedisAutoConfiguration` conflicts with `lib-common-cache`.
+**Cause:** Spring Boot's `RedisAutoConfiguration` conflicts with [`fireflyframework-cache`](https://github.com/fireflyframework/fireflyframework-cache).
 
 **Solution:**
 Exclude Spring Boot's Redis auto-configuration:
@@ -151,11 +151,11 @@ Container startup failed: Timed out waiting for log output matching 'Ready to ac
 Remove custom `--loglevel` command:
 
 ```java
-// ❌ Wrong
+// Wrong
 static RedisContainer redis = new RedisContainer(DockerImageName.parse("redis:7-alpine"))
     .withCommand("redis-server", "--loglevel", "warning");
 
-// ✅ Correct
+// Correct
 static RedisContainer redis = new RedisContainer(DockerImageName.parse("redis:7-alpine"));
 ```
 
@@ -292,23 +292,20 @@ Configuration properties not loading
 **Cause:** Using wrong property prefix in YAML.
 
 **Solution:**
-Use correct prefixes:
+Use correct prefixes. The IDP provider is selected with `firefly.security-center.idp.provider`, and
+the Keycloak-specific properties are loaded by the framework library's own configuration (typically
+under `keycloak.*` or as defined by the `lib-idp-keycloak-impl` library). Cognito and cache properties:
 
-- **Keycloak:** `keycloak.*` (not `firefly.security-center.idp.keycloak.*`)
-- **Cognito:** `firefly.security-center.idp.cognito.*`
-- **Redis:** `firefly.cache.redis.*`
+- **IDP provider selection:** `firefly.security-center.idp.provider`
+- **Cognito:** Properties defined by `lib-idp-aws-cognito-impl`
+- **Redis/Cache:** `firefly.cache.*` (via `fireflyframework-cache`)
 
+Check the test configuration at `application-test.yml` for a working example:
 ```yaml
-# ✅ Correct
-keycloak:
-  server-url: http://localhost:8080
-
-# ❌ Wrong
 firefly:
   security-center:
     idp:
-      keycloak:
-        server-url: http://localhost:8080
+      provider: keycloak
 ```
 
 ---
@@ -354,7 +351,7 @@ INFO: Selected IDP provider: cognito
 1. Check cache configuration is correct
 2. Verify cache health:
 ```bash
-curl http://localhost:8080/actuator/health
+curl http://localhost:8085/actuator/health
 ```
 
 3. Check logs for cache errors:
@@ -481,8 +478,8 @@ redis-cli CONFIG SET maxmemory-policy allkeys-lru
 ```yaml
 logging:
   level:
-    com.firefly.securitycenter: DEBUG
-    com.firefly.securitycenter.core.services: TRACE
+    com.firefly.security.center: DEBUG
+    com.firefly.security.center.core.services: TRACE
     org.springframework.cache: DEBUG
     io.lettuce.core: DEBUG
 ```
@@ -491,13 +488,13 @@ logging:
 
 ```bash
 # Health check
-curl http://localhost:8080/actuator/health
+curl http://localhost:8085/actuator/health
 
 # Metrics
-curl http://localhost:8080/actuator/metrics
+curl http://localhost:8085/actuator/metrics
 
 # Info
-curl http://localhost:8080/actuator/info
+curl http://localhost:8085/actuator/info
 ```
 
 ### Verify IDP Configuration
@@ -579,13 +576,13 @@ redis-cli ping
 
 ## Best Practices to Avoid Issues
 
-1. ✅ Always use environment variables for secrets
-2. ✅ Test configuration changes in dev environment first
-3. ✅ Monitor cache hit rates and adjust TTL accordingly
-4. ✅ Implement proper error handling for downstream services
-5. ✅ Use health checks in load balancers
-6. ✅ Set up alerting for authentication failures
-7. ✅ Regularly rotate IDP client secrets
-8. ✅ Keep dependencies up to date
-9. ✅ Run integration tests before deployment
-10. ✅ Enable TLS for Redis and IDP in production
+1. Always use environment variables for secrets
+2. Test configuration changes in dev environment first
+3. Monitor cache hit rates and adjust TTL accordingly
+4. Implement proper error handling for downstream services
+5. Use health checks in load balancers
+6. Set up alerting for authentication failures
+7. Regularly rotate IDP client secrets
+8. Keep dependencies up to date
+9. Run integration tests before deployment
+10. Enable TLS for Redis and IDP in production

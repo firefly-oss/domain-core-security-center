@@ -23,7 +23,7 @@ http://localhost:8085/api/v1/sessions
 
 Authenticate a user and create a new session.
 
-**Endpoint:** `POST /login`
+**Endpoint:** `POST /api/v1/auth/login`
 
 **Request:**
 ```json
@@ -82,7 +82,7 @@ curl -X POST http://localhost:8085/api/v1/auth/login \
 
 Refresh an access token using a refresh token.
 
-**Endpoint:** `POST /refresh`
+**Endpoint:** `POST /api/v1/auth/refresh`
 
 **Request:**
 ```json
@@ -127,7 +127,7 @@ curl -X POST http://localhost:8085/api/v1/auth/refresh \
 
 Logout a user and invalidate their session.
 
-**Endpoint:** `POST /logout`
+**Endpoint:** `POST /api/v1/auth/logout`
 
 **Request:**
 ```json
@@ -138,20 +138,17 @@ Logout a user and invalidate their session.
 }
 ```
 
-**Response:** `200 OK`
-```json
-{
-  "message": "Logout successful"
-}
-```
+**Response:** `204 No Content`
+
+(No response body on success.)
 
 **Error Responses:**
 
-- `401 Unauthorized` - Invalid token
+- `500 Internal Server Error` - Logout failed
 ```json
 {
-  "error": "INVALID_TOKEN",
-  "message": "Access token is invalid"
+  "error": "INTERNAL_ERROR",
+  "message": "Logout operation failed"
 }
 ```
 
@@ -168,6 +165,82 @@ curl -X POST http://localhost:8085/api/v1/auth/logout \
 
 ---
 
+### 4. Introspect Token
+
+Validate an IDP access token and get its details.
+
+**Endpoint:** `POST /api/v1/auth/introspect`
+
+**Query Parameters:**
+- `accessToken` (string, required) - The access token to introspect
+
+**Response:** `200 OK`
+```json
+{
+  "active": true,
+  "username": "testuser",
+  "exp": 1698353640
+}
+```
+
+**cURL Example:**
+```bash
+curl -X POST "http://localhost:8085/api/v1/auth/introspect?accessToken=eyJhbGci..."
+```
+
+---
+
+### 5. Reset Password
+
+Trigger IDP password reset flow for a user.
+
+**Endpoint:** `POST /api/v1/auth/reset-password`
+
+**Query Parameters:**
+- `userName` (string, required) - The username to reset password for
+
+**Response:** `204 No Content`
+
+**cURL Example:**
+```bash
+curl -X POST "http://localhost:8085/api/v1/auth/reset-password?userName=testuser"
+```
+
+---
+
+## User Management Endpoints
+
+### Create User
+
+Create a new user in the IDP.
+
+**Endpoint:** `POST /api/v1/users`
+
+**Request:**
+```json
+{
+  "username": "newuser",
+  "email": "newuser@example.com",
+  "password": "SecurePass123!"
+}
+```
+
+**Response:** `200 OK`
+Returns the created user details (structure depends on IDP adapter implementation).
+
+**cURL Example:**
+```bash
+curl -X POST http://localhost:8085/api/v1/users \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "newuser",
+    "email": "newuser@example.com",
+    "password": "SecurePass123!"
+  }'
+```
+
+---
+
 ## Session Management Endpoints
 
 ### 1. Get Session by ID
@@ -176,11 +249,6 @@ Retrieve session details by session ID.
 
 **Endpoint:** `GET /api/v1/sessions/{sessionId}`
 
-**Headers:**
-```
-Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
 **Response:** `200 OK`
 ```json
 {
@@ -188,7 +256,7 @@ Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
   "partyId": "123e4567-e89b-12d3-a456-426614174000",
   "customerInfo": {
     "partyId": "123e4567-e89b-12d3-a456-426614174000",
-    "partyKind": "NATURAL_PERSON",
+    "partyKind": "INDIVIDUAL",
     "tenantId": "tenant-123",
     "fullName": "John Doe",
     "preferredLanguage": "en",
@@ -526,81 +594,77 @@ curl -X GET http://localhost:8085/actuator/health
 
 ## Data Models
 
-### AuthenticationRequest
+### LoginRequest
+
+Used by `POST /api/v1/auth/login`. The actual Java class is `org.fireflyframework.idp.dtos.LoginRequest`.
 
 ```typescript
-interface AuthenticationRequest {
+interface LoginRequest {
   username: string;       // Required: User's email or username
   password: string;       // Required: User's password
-  scope?: string;         // Optional: OAuth 2.0 scopes (default: "openid profile email")
+  scope?: string;         // Optional: OAuth 2.0 scopes
 }
 ```
 
 ### AuthenticationResponse
+
+Returned by login and refresh endpoints. The actual Java class is `AuthenticationService.AuthenticationResponse` (inner class).
 
 ```typescript
 interface AuthenticationResponse {
   accessToken: string;    // JWT access token
   refreshToken: string;   // JWT refresh token
   idToken: string;        // JWT ID token
-  tokenType: string;      // Token type (always "Bearer")
-  expiresIn: number;      // Token expiration in seconds
-  sessionId: string;      // UUID of created session
+  tokenType: string;      // Token type (e.g., "Bearer")
+  expiresIn: number;      // Token expiration in seconds (int64)
+  sessionId: string;      // Session ID (format: "session_{partyId}_{timestamp}")
   partyId: string;        // UUID of authenticated party
 }
 ```
 
-### RefreshTokenRequest
+### RefreshRequest
+
+Used by `POST /api/v1/auth/refresh`. The actual Java class is `org.fireflyframework.idp.dtos.RefreshRequest`.
 
 ```typescript
-interface RefreshTokenRequest {
+interface RefreshRequest {
   refreshToken: string;   // Required: Valid refresh token
 }
 ```
 
-### RefreshTokenResponse
+### AuthLogoutRequest
+
+Used by `POST /api/v1/auth/logout`. The actual Java class is `AuthenticationService.AuthLogoutRequest` (inner class).
 
 ```typescript
-interface RefreshTokenResponse {
-  accessToken: string;    // New JWT access token
-  refreshToken: string;   // New JWT refresh token
-  idToken: string;        // New JWT ID token
-  tokenType: string;      // Token type (always "Bearer")
-  expiresIn: number;      // Token expiration in seconds
-}
-```
-
-### LogoutRequest
-
-```typescript
-interface LogoutRequest {
+interface AuthLogoutRequest {
   accessToken: string;    // Required: Current access token
   refreshToken: string;   // Required: Current refresh token
-  sessionId: string;      // Required: Session UUID to invalidate
+  sessionId: string;      // Required: Session ID to invalidate
 }
 ```
 
 ### SessionContext
 
 ```typescript
-interface SessionContext {
+interface SessionContextDTO {
   sessionId: string;
-  partyId: string;
-  customerInfo: CustomerInfo;        // Note: "customerInfo" not "customer"
-  activeContracts: ContractInfo[];
-  createdAt: string;                 // ISO 8601 timestamp
-  lastAccessedAt: string;            // ISO 8601 timestamp
-  expiresAt: string;                 // ISO 8601 timestamp
+  partyId: string;                   // UUID
+  customerInfo: CustomerInfoDTO;
+  activeContracts: ContractInfoDTO[];
+  createdAt: string;                 // ISO 8601 timestamp (LocalDateTime)
+  lastAccessedAt: string;            // ISO 8601 timestamp (LocalDateTime)
+  expiresAt: string;                 // ISO 8601 timestamp (LocalDateTime)
   ipAddress: string;
   userAgent: string;
   status: "ACTIVE" | "EXPIRED" | "INVALIDATED" | "LOCKED";
-  metadata: SessionMetadata;
+  metadata: SessionMetadataDTO;
 }
 
-interface CustomerInfo {
+interface CustomerInfoDTO {
   partyId: string;
-  partyKind: string;                 // NATURAL_PERSON or LEGAL_ENTITY
-  tenantId: string;
+  partyKind: string;                 // INDIVIDUAL or ORGANIZATION
+  tenantId: string;                  // UUID
   fullName: string;
   preferredLanguage: string;
   email: string;
@@ -609,15 +673,15 @@ interface CustomerInfo {
   isActive: boolean;
 }
 
-interface ContractInfo {
-  contractId: string;
+interface ContractInfoDTO {
+  contractId: string;                // UUID
   contractNumber: string;
-  contractStatus: string;            // Note: "contractStatus" not "status"
-  startDate: string;                 // ISO 8601 timestamp
-  endDate: string;                   // ISO 8601 timestamp
-  contractPartyId: string;
-  roleInContract: RoleInfo;
-  product: ProductInfo;
+  contractStatus: string;
+  startDate: string;                 // ISO 8601 timestamp (LocalDateTime)
+  endDate: string;                   // ISO 8601 timestamp (LocalDateTime)
+  contractPartyId: string;           // UUID
+  roleInContract: RoleInfoDTO;
+  product: ProductInfoDTO;
   dateJoined: string;                // ISO 8601 timestamp
   dateLeft: string;                  // ISO 8601 timestamp
   isActive: boolean;
@@ -625,35 +689,35 @@ interface ContractInfo {
   updatedAt: string;                 // ISO 8601 timestamp
 }
 
-interface ProductInfo {
-  productId: string;
-  productCatalogId: string;
-  productSubtypeId: string;
+interface ProductInfoDTO {
+  productId: string;                 // UUID
+  productCatalogId: string;          // UUID
+  productSubtypeId: string;          // UUID
   productName: string;
   productCode: string;
   productDescription: string;
   productType: string;
   productStatus: string;
-  launchDate: string;                // ISO 8601 date
-  endDate: string;                   // ISO 8601 date
-  dateCreated: string;               // ISO 8601 timestamp
-  dateUpdated: string;               // ISO 8601 timestamp
+  launchDate: string;                // ISO 8601 date (LocalDate)
+  endDate: string;                   // ISO 8601 date (LocalDate)
+  dateCreated: string;               // ISO 8601 timestamp (LocalDateTime)
+  dateUpdated: string;               // ISO 8601 timestamp (LocalDateTime)
 }
 
-interface RoleInfo {
-  roleId: string;
+interface RoleInfoDTO {
+  roleId: string;                    // UUID
   roleCode: string;
-  name: string;                      // Note: "name" not "roleName"
+  name: string;
   description: string;
   isActive: boolean;
-  scopes: RoleScopeInfo[];           // Note: RoleScopeInfo not RoleScope
-  dateCreated: string;               // ISO 8601 timestamp
-  dateUpdated: string;               // ISO 8601 timestamp
+  scopes: RoleScopeInfoDTO[];
+  dateCreated: string;               // ISO 8601 timestamp (LocalDateTime)
+  dateUpdated: string;               // ISO 8601 timestamp (LocalDateTime)
 }
 
-interface RoleScopeInfo {
-  scopeId: string;
-  roleId: string;
+interface RoleScopeInfoDTO {
+  scopeId: string;                   // UUID
+  roleId: string;                    // UUID
   scopeCode: string;
   scopeName: string;
   description: string;
@@ -662,7 +726,7 @@ interface RoleScopeInfo {
   isActive: boolean;
 }
 
-interface SessionMetadata {
+interface SessionMetadataDTO {
   channel: string;                   // web, mobile, api
   sourceApplication: string;
   deviceInfo: string;
@@ -743,23 +807,23 @@ spring:
 
 ```mermaid
 sequenceDiagram
-    Client->>Security Center: POST /login
+    Client->>Security Center: POST /api/v1/auth/login
     Security Center->>IDP: Authenticate
     IDP-->>Security Center: Tokens
     Security Center->>Customer Mgmt: Get customer
     Security Center->>Contract Mgmt: Get contracts
-    Security Center->>Redis: Cache session
+    Security Center->>Cache: Cache session
     Security Center-->>Client: AuthenticationResponse
-    
-    Client->>Security Center: GET /session/{id}
-    Security Center->>Redis: Retrieve session
-    Redis-->>Security Center: SessionContext
-    Security Center-->>Client: SessionContext
-    
-    Client->>Security Center: POST /logout
+
+    Client->>Security Center: GET /api/v1/sessions/{id}
+    Security Center->>Cache: Retrieve session
+    Cache-->>Security Center: SessionContextDTO
+    Security Center-->>Client: SessionContextDTO
+
+    Client->>Security Center: POST /api/v1/auth/logout
     Security Center->>IDP: Revoke tokens
-    Security Center->>Redis: Delete session
-    Security Center-->>Client: Success
+    Security Center->>Cache: Delete session
+    Security Center-->>Client: 204 No Content
 ```
 
 ---
@@ -771,7 +835,7 @@ sequenceDiagram
 private FireflySessionManager sessionManager;
 
 // Create or retrieve session from request
-public Mono<SessionContext> handleRequest(ServerWebExchange exchange) {
+public Mono<SessionContextDTO> handleRequest(ServerWebExchange exchange) {
     return sessionManager.createOrGetSession(exchange)
         .flatMap(session -> {
             // Use session for authorization

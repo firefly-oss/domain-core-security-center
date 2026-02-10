@@ -9,7 +9,7 @@ The Firefly Security Center provides centralized session management and security
 ```
 core-domain-security-center/
 ├── core-domain-security-center-interfaces/   # DTOs and contracts
-├── core-domain-security-center-session/      # ★ Exportable library
+├── core-domain-security-center-session/      # Exportable library
 ├── core-domain-security-center-core/         # Business logic
 ├── core-domain-security-center-web/          # REST API
 └── core-domain-security-center-sdk/          # Client SDK
@@ -28,8 +28,10 @@ core-domain-security-center/
 - `CustomerInfoDTO` - Customer/party information
 - `ProductInfoDTO` - Product details
 - `RoleInfoDTO` - Role and permission scopes
+- `RoleScopeInfoDTO` - Individual permission scope
+- `SessionMetadataDTO` - Additional session metadata
 
-#### 2. Session Module ★ **Exportable**
+#### 2. Session Module **Exportable**
 - `FireflySessionManager` interface
 - Imported by other microservices
 - Minimal dependencies
@@ -51,9 +53,11 @@ core-domain-security-center/
 **Key Components:**
 - `AuthenticationService` - Authentication orchestration
 - `FireflySessionManagerImpl` - Session management implementation
-- `ContractResolverService` - Contract resolution
+- `SessionAggregationService` - Session context aggregation from multiple services
+- `ContractResolverService` - Contract, role, scope, and product resolution
 - `CustomerResolverService` - Customer data resolution
-- `ProductResolverService` - Product information resolution
+- `DefaultUserMappingService` - IDP user to party ID mapping
+- `UserService` - User creation via IDP
 - `IdpAutoConfiguration` - IDP provider selection
 
 #### 4. Web Module
@@ -62,11 +66,28 @@ core-domain-security-center/
 - Integration tests
 - Spring Boot application
 
-**Endpoints:**
+**Endpoints (AuthenticationController):**
 - `POST /api/v1/auth/login` - User authentication
 - `POST /api/v1/auth/refresh` - Token refresh
 - `POST /api/v1/auth/logout` - User logout
-- `GET /api/v1/auth/session/{sessionId}` - Retrieve session
+- `POST /api/v1/auth/introspect` - Token introspection
+- `POST /api/v1/auth/reset-password` - Password reset
+
+**Endpoints (SessionController):**
+- `POST /api/v1/sessions` - Create or get session
+- `GET /api/v1/sessions/{sessionId}` - Retrieve session by ID
+- `GET /api/v1/sessions/party/{partyId}` - Retrieve session by party
+- `DELETE /api/v1/sessions/{sessionId}` - Invalidate session
+- `DELETE /api/v1/sessions/party/{partyId}` - Invalidate sessions by party
+- `POST /api/v1/sessions/{sessionId}/refresh` - Refresh session
+- `GET /api/v1/sessions/{sessionId}/validate` - Validate session
+- `GET /api/v1/sessions/access-check` - Check product access
+- `GET /api/v1/sessions/permission-check` - Check permission
+
+**Endpoints (UserController):**
+- `POST /api/v1/users` - Create user in IDP
+
+**Health:**
 - `GET /actuator/health` - Health checks
 
 #### 5. SDK Module
@@ -96,18 +117,21 @@ The Security Center uses a pluggable adapter pattern for Identity Provider integ
                ▼
 ┌─────────────────────────────────────┐
 │   IdpAdapter Interface              │
-│   • authenticate()                  │
-│   • refreshToken()                  │
+│   • login()                         │
+│   • refresh()                       │
 │   • logout()                        │
 │   • getUserInfo()                   │
+│   • introspect()                    │
+│   • resetPassword()                 │
+│   • createUser()                    │
 └──────────────┬──────────────────────┘
                │
-       ┌───────┴───────┐
-       ▼               ▼
-┌──────────────┐  ┌──────────────┐
-│ Keycloak     │  │ AWS Cognito  │
-│ Adapter      │  │ Adapter      │
-└──────────────┘  └──────────────┘
+       ┌───────┼───────┐
+       ▼       ▼       ▼
+┌────────┐ ┌────────┐ ┌──────────┐
+│Keycloak│ │Cognito │ │InternalDB│
+│Adapter │ │Adapter │ │Adapter   │
+└────────┘ └────────┘ └──────────┘
 ```
 
 ### IDP Selection
@@ -118,7 +142,7 @@ Configured via `firefly.security-center.idp.provider`:
 firefly:
   security-center:
     idp:
-      provider: keycloak  # or "cognito"
+      provider: keycloak  # or "cognito" or "internal-db"
 ```
 
 The `IdpAutoConfiguration` class conditionally loads the correct adapter bean based on this property.
@@ -143,7 +167,7 @@ The `IdpAutoConfiguration` class conditionally loads the correct adapter bean ba
        ├─> Fetch role scopes/permissions (reference-master-data)
        └─> Fetch product info (product-mgmt)
 
-4. Aggregate into SessionContext
+4. Aggregate into SessionContextDTO
 
 5. Cache session (Redis/Caffeine)
 
@@ -210,12 +234,12 @@ public class CustomUserMappingService implements UserMappingService {
 ### Data Model
 
 ```
-SessionContext
+SessionContextDTO
 ├── sessionId: String
 ├── partyId: UUID
-├── customerInfo: CustomerInfo
+├── customerInfo: CustomerInfoDTO
 │   ├── partyId: UUID
-│   ├── partyKind: String (NATURAL_PERSON or LEGAL_ENTITY)
+│   ├── partyKind: String (INDIVIDUAL or ORGANIZATION)
 │   ├── tenantId: UUID
 │   ├── fullName: String
 │   ├── preferredLanguage: String
@@ -223,28 +247,35 @@ SessionContext
 │   ├── phoneNumber: String
 │   ├── taxIdNumber: String
 │   └── isActive: Boolean
-├── activeContracts: List<ContractInfo>
-│   └── ContractInfo
+├── activeContracts: List<ContractInfoDTO>
+│   └── ContractInfoDTO
 │       ├── contractId: UUID
 │       ├── contractNumber: String
 │       ├── contractStatus: String
 │       ├── startDate: LocalDateTime
 │       ├── endDate: LocalDateTime
 │       ├── contractPartyId: UUID
-│       ├── product: ProductInfo
+│       ├── product: ProductInfoDTO
 │       │   ├── productId: UUID
+│       │   ├── productCatalogId: UUID
+│       │   ├── productSubtypeId: UUID
 │       │   ├── productName: String
+│       │   ├── productCode: String
+│       │   ├── productDescription: String
 │       │   ├── productType: String
-│       │   ├── description: String
-│       │   └── isActive: Boolean
-│       ├── roleInContract: RoleInfo
+│       │   ├── productStatus: String
+│       │   ├── launchDate: LocalDate
+│       │   ├── endDate: LocalDate
+│       │   ├── dateCreated: LocalDateTime
+│       │   └── dateUpdated: LocalDateTime
+│       ├── roleInContract: RoleInfoDTO
 │       │   ├── roleId: UUID
 │       │   ├── roleCode: String
 │       │   ├── name: String
 │       │   ├── description: String
 │       │   ├── isActive: Boolean
-│       │   ├── scopes: List<RoleScopeInfo>
-│       │   │   └── RoleScopeInfo
+│       │   ├── scopes: List<RoleScopeInfoDTO>
+│       │   │   └── RoleScopeInfoDTO
 │       │   │       ├── scopeId: UUID
 │       │   │       ├── roleId: UUID
 │       │   │       ├── scopeCode: String
@@ -266,7 +297,7 @@ SessionContext
 ├── ipAddress: String
 ├── userAgent: String
 ├── status: SessionStatus (ACTIVE, EXPIRED, INVALIDATED, LOCKED)
-└── metadata: SessionMetadata
+└── metadata: SessionMetadataDTO
     ├── channel: String (web, mobile, api)
     ├── sourceApplication: String
     ├── deviceInfo: String
@@ -277,7 +308,7 @@ SessionContext
 
 ### Cache Abstraction
 
-Uses `lib-common-cache` for cache backend abstraction:
+Uses [`fireflyframework-cache`](https://github.com/fireflyframework/fireflyframework-cache) for cache backend abstraction:
 
 ```
 ┌─────────────────────────────────────┐
@@ -288,7 +319,7 @@ Uses `lib-common-cache` for cache backend abstraction:
                ▼
 ┌─────────────────────────────────────┐
 │   CacheManager                      │
-│   (lib-common-cache)                │
+│   (fireflyframework-cache)                │
 └──────────────┬──────────────────────┘
                │
        ┌───────┴───────┐
@@ -341,13 +372,14 @@ firefly:
 - **Spring Data Redis** - Redis integration
 
 ### IDP Integration
-- **lib-idp-keycloak-impl** - Keycloak adapter
-- **lib-idp-aws-cognito-impl** - AWS Cognito adapter
+- **lib-idp-keycloak-impl** - Keycloak adapter (`com.firefly.idp.adapter.impl.IdpAdapterImpl`)
+- **lib-idp-aws-cognito-impl** - AWS Cognito adapter (`com.firefly.idp.cognito.adapter.CognitoIdpAdapter`)
+- **lib-idp-internal-db-impl** - Internal database adapter (`com.firefly.idp.internaldb.adapter.InternalDbIdpAdapter`)
 - **AWS SDK for Java 2.x** - AWS service integration
 - **Keycloak Admin Client** - Keycloak API client
 
 ### Caching
-- **lib-common-cache** - Firefly's cache abstraction
+- **[fireflyframework-cache](https://github.com/fireflyframework/fireflyframework-cache)** - Firefly's cache abstraction
 - **Lettuce** - Redis client
 - **Caffeine** - In-memory cache
 
@@ -363,19 +395,17 @@ firefly:
 The entire stack is built on reactive principles using Project Reactor:
 
 ```java
-// Example: Session creation flow
-public Mono<SessionContext> createSession(String username, String password) {
-    return idpAdapter.authenticate(username, password)           // Mono<AuthResponse>
-        .flatMap(auth -> enrichSession(auth))                    // Mono<SessionContext>
-        .flatMap(session -> cacheSession(session))               // Mono<SessionContext>
-        .doOnError(error -> log.error("Auth failed", error));    // Error handling
-}
-
-private Mono<SessionContext> enrichSession(AuthResponse auth) {
+// Example: Session aggregation flow (SessionAggregationService)
+public Mono<SessionContextDTO> aggregateSessionContext(UUID partyId) {
     return Mono.zip(
-        customerService.getCustomer(auth.getPartyId()),          // Parallel
-        contractService.getContracts(auth.getPartyId())          // execution
-    ).map(tuple -> buildSession(auth, tuple.getT1(), tuple.getT2()));
+        customerResolverService.resolveCustomerInfo(partyId),       // Parallel
+        contractResolverService.resolveActiveContracts(partyId)     // execution
+    ).map(tuple -> SessionContextDTO.builder()
+            .partyId(partyId)
+            .customerInfo(tuple.getT1())
+            .activeContracts(tuple.getT2())
+            .build())
+    .doOnError(error -> log.error("Session aggregation failed", error));
 }
 ```
 
@@ -445,13 +475,15 @@ private Mono<SessionContext> enrichSession(AuthResponse auth) {
 3. Add conditional bean configuration
 4. Update `firefly.security-center.idp.provider` enum
 
-Example structure:
+Example structure (add as inner class in `IdpAutoConfiguration`):
 ```java
-@Component
-@ConditionalOnProperty(name = "firefly.security-center.idp.provider", 
-                       havingValue = "okta")
-public class OktaIdpAdapter implements IdpAdapter {
-    // Implementation
+@Configuration
+@ConditionalOnClass(name = "com.example.idp.okta.OktaIdpAdapter")
+@ConditionalOnProperty(prefix = "firefly.security-center.idp",
+                       name = "provider", havingValue = "okta")
+@ComponentScan(basePackages = "com.example.idp.okta")
+static class OktaIdpConfiguration {
+    // Auto-configures when Okta adapter is on classpath and provider=okta
 }
 ```
 
