@@ -79,7 +79,7 @@ public class SessionCacheAutoConfiguration {
                 SESSION_CACHE_KEY_PREFIX,
                 SESSION_CACHE_TTL,
                 description,
-                "core-domain-security-center-core.SessionCacheAutoConfiguration"
+                "domain-core-security-center-core.SessionCacheAutoConfiguration"
         );
     }
 }

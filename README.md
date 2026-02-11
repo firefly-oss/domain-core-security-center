@@ -260,7 +260,7 @@ Other microservices don't call the Security Center's REST API. Instead, they imp
 ```xml
 <dependency>
     <groupId>com.firefly</groupId>
-    <artifactId>core-domain-security-center-session</artifactId>
+    <artifactId>domain-core-security-center-session</artifactId>
 </dependency>
 ```
 
@@ -312,14 +312,14 @@ The Security Center uses a **layered, modular architecture** with clear separati
                      ▼
 ┌─────────────────────────────────────────────────────────┐
 │        Security Center - Session Library                │
-│    (core-domain-security-center-session)            │
+│    (domain-core-security-center-session)            │
 │       FireflySessionManager Interface                   │
 └────────────────────┬────────────────────────────────────┘
                      │
                      ▼
 ┌─────────────────────────────────────────────────────────┐
 │        Security Center - Core Business Logic            │
-│    (core-domain-security-center-core)               │
+│    (domain-core-security-center-core)               │
 │  • AuthenticationService                                │
 │  • Session Enrichment Services                          │
 │  • IDP Adapter Selection                                │
@@ -344,26 +344,26 @@ The Security Center uses a **layered, modular architecture** with clear separati
 ### Module Structure
 
 ```
-core-domain-security-center/
-├── core-domain-security-center-interfaces/
+domain-core-security-center/
+├── domain-core-security-center-interfaces/
 │   └── DTOs and data contracts
 │
-├── core-domain-security-center-session/      EXPORTABLE
+├── domain-core-security-center-session/      EXPORTABLE
 │   └── FireflySessionManager interface
 │       (Imported by all other microservices)
 │
-├── core-domain-security-center-core/
+├── domain-core-security-center-core/
 │   ├── AuthenticationService
 │   ├── Session Enrichment (Customer, Contract, Product)
 │   ├── IDP Adapters (Keycloak, Cognito)
 │   └── Caching Integration
 │
-├── core-domain-security-center-web/
+├── domain-core-security-center-web/
 │   ├── REST API Controllers
 │   ├── Spring Boot Application
 │   └── Integration Tests
 │
-└── core-domain-security-center-sdk/
+└── domain-core-security-center-sdk/
     └── Client SDK for downstream services
 ```
 
@@ -443,8 +443,8 @@ Before you begin, ensure you have:
 
 ```bash
 # Clone the repository
-git clone https://github.com/firefly-oss/core-domain-security-center.git
-cd core-domain-security-center
+git clone https://github.com/firefly-oss/domain-core-security-center.git
+cd domain-core-security-center
 
 # Build the project (runs all tests)
 mvn clean install
@@ -515,7 +515,7 @@ curl http://localhost:8080/health/ready
 
 #### A3. Configure Security Center
 
-Create `core-domain-security-center-web/src/main/resources/application-local.yml`:
+Create `domain-core-security-center-web/src/main/resources/application-local.yml`:
 
 ```yaml
 server:
@@ -569,7 +569,7 @@ logging:
 #### A4. Run Security Center
 
 ```bash
-mvn spring-boot:run -pl core-domain-security-center-web -Dspring-boot.run.profiles=local
+mvn spring-boot:run -pl domain-core-security-center-web -Dspring-boot.run.profiles=local
 ```
 
 **Expected output:**
@@ -701,7 +701,7 @@ export REFERENCE_MASTER_DATA_URL=https://reference-data.firefly.com
 #### B6. Run Security Center
 
 ```bash
-java -jar core-domain-security-center-web/target/core-domain-security-center-web-1.0.0-SNAPSHOT.jar \
+java -jar domain-core-security-center-web/target/domain-core-security-center-web-1.0.0-SNAPSHOT.jar \
   --spring.profiles.active=prod
 ```
 
@@ -887,7 +887,7 @@ Other Firefly microservices import the session library:
 ```xml
 <dependency>
     <groupId>com.firefly</groupId>
-    <artifactId>core-domain-security-center-session</artifactId>
+    <artifactId>domain-core-security-center-session</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>
 ```

@@ -7,12 +7,12 @@ The Firefly Security Center provides centralized session management and security
 ## Module Structure
 
 ```
-core-domain-security-center/
-├── core-domain-security-center-interfaces/   # DTOs and contracts
-├── core-domain-security-center-session/      # Exportable library
-├── core-domain-security-center-core/         # Business logic
-├── core-domain-security-center-web/          # REST API
-└── core-domain-security-center-sdk/          # Client SDK
+domain-core-security-center/
+├── domain-core-security-center-interfaces/   # DTOs and contracts
+├── domain-core-security-center-session/      # Exportable library
+├── domain-core-security-center-core/         # Business logic
+├── domain-core-security-center-web/          # REST API
+└── domain-core-security-center-sdk/          # Client SDK
 ```
 
 ### Module Responsibilities
@@ -40,7 +40,7 @@ core-domain-security-center/
 ```xml
 <dependency>
     <groupId>com.firefly</groupId>
-    <artifactId>core-domain-security-center-session</artifactId>
+    <artifactId>domain-core-security-center-session</artifactId>
 </dependency>
 ```
 

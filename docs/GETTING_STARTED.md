@@ -55,8 +55,8 @@ In a microservices architecture, **authentication and authorization** become com
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/firefly-oss/core-domain-security-center.git
-cd core-domain-security-center
+git clone https://github.com/firefly-oss/domain-core-security-center.git
+cd domain-core-security-center
 ```
 
 ### Build the Project
@@ -69,7 +69,7 @@ mvn clean install
 mvn clean install -DskipTests
 
 # Build specific module
-mvn clean install -pl core-domain-security-center-web
+mvn clean install -pl domain-core-security-center-web
 ```
 
 **Expected Output:**
@@ -130,7 +130,7 @@ services:
 ```dockerfile
 FROM eclipse-temurin:25-jdk-alpine
 WORKDIR /app
-COPY core-domain-security-center-web/target/*.jar app.jar
+COPY domain-core-security-center-web/target/*.jar app.jar
 EXPOSE 8085
 ENTRYPOINT ["java", "-jar", "app.jar"]
 ```
@@ -205,7 +205,7 @@ firefly:
 
 #### Step 4: Configure Security Center
 
-Edit `core-domain-security-center-web/src/main/resources/application-local.yml`:
+Edit `domain-core-security-center-web/src/main/resources/application-local.yml`:
 
 ```yaml
 server:
@@ -248,7 +248,7 @@ logging:
 #### Step 5: Run Security Center
 
 ```bash
-mvn spring-boot:run -pl core-domain-security-center-web -Dspring-boot.run.profiles=local
+mvn spring-boot:run -pl domain-core-security-center-web -Dspring-boot.run.profiles=local
 ```
 
 #### Step 6: Test Authentication
@@ -502,7 +502,7 @@ Add to your service's `pom.xml`:
 ```xml
 <dependency>
     <groupId>com.firefly</groupId>
-    <artifactId>core-domain-security-center-session</artifactId>
+    <artifactId>domain-core-security-center-session</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>
 ```
@@ -856,7 +856,7 @@ Now that you have the Security Center running:
 ## Support
 
 - **Documentation**: [docs/](.)
-- **Issues**: [GitHub Issues](https://github.com/firefly-oss/core-domain-security-center/issues)
+- **Issues**: [GitHub Issues](https://github.com/firefly-oss/domain-core-security-center/issues)
 - **API Reference**: [docs/API.md](API.md)
 - **Troubleshooting**: [docs/TROUBLESHOOTING.md](TROUBLESHOOTING.md)
 

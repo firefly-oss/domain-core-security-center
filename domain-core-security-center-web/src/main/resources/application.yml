@@ -1,6 +1,6 @@
 spring:
   application:
-    name: core-domain-security-center
+    name: domain-core-security-center
     version: 1.0.0
     description: Security Center - Authentication and Session Management
     team:
