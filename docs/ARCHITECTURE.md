@@ -372,9 +372,9 @@ firefly:
 - **Spring Data Redis** - Redis integration
 
 ### IDP Integration
-- **lib-idp-keycloak-impl** - Keycloak adapter (`com.firefly.idp.adapter.impl.IdpAdapterImpl`)
-- **lib-idp-aws-cognito-impl** - AWS Cognito adapter (`com.firefly.idp.cognito.adapter.CognitoIdpAdapter`)
-- **lib-idp-internal-db-impl** - Internal database adapter (`com.firefly.idp.internaldb.adapter.InternalDbIdpAdapter`)
+- **library-idp-keycloak-impl** - Keycloak adapter (`com.firefly.idp.adapter.impl.IdpAdapterImpl`)
+- **library-idp-aws-cognito-impl** - AWS Cognito adapter (`com.firefly.idp.cognito.adapter.CognitoIdpAdapter`)
+- **library-idp-internal-db-impl** - Internal database adapter (`com.firefly.idp.internaldb.adapter.InternalDbIdpAdapter`)
 - **AWS SDK for Java 2.x** - AWS service integration
 - **Keycloak Admin Client** - Keycloak API client
 

@@ -294,10 +294,10 @@ Configuration properties not loading
 **Solution:**
 Use correct prefixes. The IDP provider is selected with `firefly.security-center.idp.provider`, and
 the Keycloak-specific properties are loaded by the framework library's own configuration (typically
-under `keycloak.*` or as defined by the `lib-idp-keycloak-impl` library). Cognito and cache properties:
+under `keycloak.*` or as defined by the `library-idp-keycloak-impl` library). Cognito and cache properties:
 
 - **IDP provider selection:** `firefly.security-center.idp.provider`
-- **Cognito:** Properties defined by `lib-idp-aws-cognito-impl`
+- **Cognito:** Properties defined by `library-idp-aws-cognito-impl`
 - **Redis/Cache:** `firefly.cache.*` (via `fireflyframework-cache`)
 
 Check the test configuration at `application-test.yml` for a working example:

@@ -31,9 +31,9 @@ import org.springframework.context.annotation.Configuration;
  * <p>Dynamically configures the IDP adapter bean based on the configured provider type.
  * Supported providers include:
  * <ul>
- *   <li>Keycloak - via lib-idp-keycloak-impl</li>
- *   <li>AWS Cognito - via lib-idp-aws-cognito-impl</li>
- *   <li>Internal Database - via lib-idp-internal-db-impl</li>
+ *   <li>Keycloak - via library-idp-keycloak-impl</li>
+ *   <li>AWS Cognito - via library-idp-aws-cognito-impl</li>
+ *   <li>Internal Database - via library-idp-internal-db-impl</li>
  *   <li>Custom - user-provided IdpAdapter bean</li>
  * </ul>
  * 
@@ -49,9 +49,9 @@ import org.springframework.context.annotation.Configuration;
  * 
  * <p><strong>How It Works:</strong></p>
  * <ul>
- *   <li>For Keycloak: Auto-configures when lib-idp-keycloak-impl is on classpath AND provider=keycloak</li>
- *   <li>For Cognito: Auto-configures when lib-idp-aws-cognito-impl is on classpath AND provider=cognito</li>
- *   <li>For Internal DB: Auto-configures when lib-idp-internal-db-impl is on classpath AND provider=internal-db</li>
+ *   <li>For Keycloak: Auto-configures when library-idp-keycloak-impl is on classpath AND provider=keycloak</li>
+ *   <li>For Cognito: Auto-configures when library-idp-aws-cognito-impl is on classpath AND provider=cognito</li>
+ *   <li>For Internal DB: Auto-configures when library-idp-internal-db-impl is on classpath AND provider=internal-db</li>
  *   <li>Only one IDP implementation is loaded at runtime based on configuration</li>
  * </ul>
  */
@@ -107,12 +107,12 @@ public class IdpAutoConfiguration {
     public IdpAdapter fallbackIdpAdapter() {
         log.error("No IdpAdapter bean found. " +
                 "Please ensure the corresponding IDP implementation library is on the classpath " +
-                "(e.g., lib-idp-keycloak-impl for Keycloak, lib-idp-aws-cognito-impl for Cognito, " +
-                "lib-idp-internal-db-impl for Internal Database).");
+                "(e.g., library-idp-keycloak-impl for Keycloak, library-idp-aws-cognito-impl for Cognito, " +
+                "library-idp-internal-db-impl for Internal Database).");
         
         throw new IllegalStateException(
                 "IDP adapter not configured. " +
-                        "Add the appropriate dependency (lib-idp-keycloak-impl, lib-idp-aws-cognito-impl, " +
-                        "or lib-idp-internal-db-impl) to your project.");
+                        "Add the appropriate dependency (library-idp-keycloak-impl, library-idp-aws-cognito-impl, " +
+                        "or library-idp-internal-db-impl) to your project.");
     }
 }
