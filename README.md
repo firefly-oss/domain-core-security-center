@@ -170,10 +170,10 @@ public class SessionAggregationService {
 ```
 
 **SDKs Used:**
-- `common-platform-customer-mgmt-sdk` - Customer profiles
-- `common-platform-contract-mgmt-sdk` - Contracts and parties
-- `common-platform-product-mgmt-sdk` - Product information
-- `common-platform-reference-master-data-sdk` - Roles and permissions
+- `core-common-customer-mgmt-sdk` - Customer profiles
+- `core-common-contract-mgmt-sdk` - Contracts and parties
+- `core-common-product-mgmt-sdk` - Product information
+- `core-common-reference-master-data-sdk` - Roles and permissions
 
 #### 3. **IDP User to Party Mapping**
 
