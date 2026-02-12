@@ -16,7 +16,7 @@
 
 package com.firefly.security.center.core.config;
 
-import com.firefly.common.product.sdk.api.ProductApi;
+import com.firefly.core.product.sdk.api.ProductApi;
 import com.firefly.common.reference.master.data.sdk.api.ContractRoleApi;
 import com.firefly.common.reference.master.data.sdk.api.ContractRoleScopeApi;
 import com.firefly.core.contract.sdk.api.ContractPartiesApi;
@@ -130,18 +130,18 @@ public class SdkConfiguration {
     // ========== Product Management SDK ==========
     
     @Bean(name = "productMgmtApiClient")
-    public com.firefly.common.product.sdk.invoker.ApiClient productMgmtApiClient(
+    public com.firefly.core.product.sdk.invoker.ApiClient productMgmtApiClient(
             @Value("${firefly.security-center.clients.product-mgmt.base-url}") String baseUrl) {
         log.info("Configuring Product Management SDK with base URL: {}", baseUrl);
-        com.firefly.common.product.sdk.invoker.ApiClient client =
-            new com.firefly.common.product.sdk.invoker.ApiClient();
+        com.firefly.core.product.sdk.invoker.ApiClient client =
+            new com.firefly.core.product.sdk.invoker.ApiClient();
         client.setBasePath(baseUrl);
         return client;
     }
     
     @Bean
     public ProductApi productApi(
-            @Qualifier("productMgmtApiClient") com.firefly.common.product.sdk.invoker.ApiClient client) {
+            @Qualifier("productMgmtApiClient") com.firefly.core.product.sdk.invoker.ApiClient client) {
         return new ProductApi(client);
     }
 

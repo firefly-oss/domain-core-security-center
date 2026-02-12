@@ -16,8 +16,8 @@
 
 package com.firefly.security.center.core.services;
 
-import com.firefly.common.product.sdk.api.ProductApi;
-import com.firefly.common.product.sdk.model.ProductDTO;
+import com.firefly.core.product.sdk.api.ProductApi;
+import com.firefly.core.product.sdk.model.ProductDTO;
 import com.firefly.common.reference.master.data.sdk.api.ContractRoleApi;
 import com.firefly.common.reference.master.data.sdk.api.ContractRoleScopeApi;
 import com.firefly.common.reference.master.data.sdk.model.ContractRoleDTO;

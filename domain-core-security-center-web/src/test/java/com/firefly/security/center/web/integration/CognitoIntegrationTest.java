@@ -293,12 +293,12 @@ class CognitoIntegrationTest extends AbstractSecurityCenterIntegrationTest {
                 .thenReturn(Mono.just(mockContract));
 
         // Mock Product Management SDK
-        com.firefly.common.product.sdk.model.ProductDTO mockProduct = new com.firefly.common.product.sdk.model.ProductDTO();
+        com.firefly.core.product.sdk.model.ProductDTO mockProduct = new com.firefly.core.product.sdk.model.ProductDTO();
         mockProduct.setProductCode("LOAN-001");
         mockProduct.setProductName("Personal Loan");
-        mockProduct.setProductStatus(com.firefly.common.product.sdk.model.ProductDTO.ProductStatusEnum.ACTIVE);
+        mockProduct.setProductStatus(com.firefly.core.product.sdk.model.ProductDTO.ProductStatusEnum.ACTIVE);
         try {
-            java.lang.reflect.Field productIdField = com.firefly.common.product.sdk.model.ProductDTO.class.getDeclaredField("productId");
+            java.lang.reflect.Field productIdField = com.firefly.core.product.sdk.model.ProductDTO.class.getDeclaredField("productId");
             productIdField.setAccessible(true);
             productIdField.set(mockProduct, UUID.randomUUID());
         } catch (Exception e) {
