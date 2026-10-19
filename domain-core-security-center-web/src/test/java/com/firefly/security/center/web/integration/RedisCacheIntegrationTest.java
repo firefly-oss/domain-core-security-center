@@ -20,7 +20,7 @@ import com.firefly.core.contract.sdk.model.ContractDTO;
 import com.firefly.core.contract.sdk.model.ContractPartyDTO;
 import com.firefly.core.contract.sdk.model.PaginationResponseContractPartyDTO;
 import com.firefly.core.customer.sdk.model.*;
-import org.fireflyframework.idp.dtos.LoginRequest;
+import org.fireflyframework.security.idp.dtos.LoginRequest;
 import com.redis.testcontainers.RedisContainer;
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 import lombok.extern.slf4j.Slf4j;
@@ -79,8 +79,8 @@ import static org.mockito.Mockito.when;
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @org.springframework.boot.autoconfigure.EnableAutoConfiguration(exclude = {
-        org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration.class,
-        org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration.class
+        org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration.class,
+        org.springframework.boot.data.redis.autoconfigure.DataRedisReactiveAutoConfiguration.class
 })
 @Disabled("Integration test - requires Docker with Redis container")
 class RedisCacheIntegrationTest extends AbstractSecurityCenterIntegrationTest {

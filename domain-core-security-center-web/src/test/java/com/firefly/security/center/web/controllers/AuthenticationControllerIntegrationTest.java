@@ -16,8 +16,8 @@
 
 package com.firefly.security.center.web.controllers;
 
-import org.fireflyframework.idp.dtos.LoginRequest;
-import org.fireflyframework.idp.dtos.RefreshRequest;
+import org.fireflyframework.security.idp.dtos.LoginRequest;
+import org.fireflyframework.security.idp.dtos.RefreshRequest;
 import com.firefly.security.center.core.services.AuthenticationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -596,7 +596,7 @@ curl -X GET http://localhost:8085/actuator/health
 
 ### LoginRequest
 
-Used by `POST /api/v1/auth/login`. The actual Java class is `org.fireflyframework.idp.dtos.LoginRequest`.
+Used by `POST /api/v1/auth/login`. The actual Java class is `org.fireflyframework.security.idp.dtos.LoginRequest`.
 
 ```typescript
 interface LoginRequest {
@@ -624,7 +624,7 @@ interface AuthenticationResponse {
 
 ### RefreshRequest
 
-Used by `POST /api/v1/auth/refresh`. The actual Java class is `org.fireflyframework.idp.dtos.RefreshRequest`.
+Used by `POST /api/v1/auth/refresh`. The actual Java class is `org.fireflyframework.security.idp.dtos.RefreshRequest`.
 
 ```typescript
 interface RefreshRequest {

@@ -16,7 +16,7 @@
 
 package com.firefly.security.center.web.integration;
 
-import org.fireflyframework.idp.dtos.LoginRequest;
+import org.fireflyframework.security.idp.dtos.LoginRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -25,7 +25,7 @@ import com.firefly.core.customer.sdk.api.*;
 import com.firefly.security.center.web.config.SecurityCenterTestConfiguration;
 import org.junit.jupiter.api.Tag;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -61,37 +61,37 @@ import java.util.UUID;
 public abstract class AbstractSecurityCenterIntegrationTest {
 
     // Mock Customer Management SDK APIs
-    @MockBean
+    @MockitoBean
     protected PartiesApi partiesApi;
     
-    @MockBean
+    @MockitoBean
     protected NaturalPersonsApi naturalPersonsApi;
     
-    @MockBean
+    @MockitoBean
     protected LegalEntitiesApi legalEntitiesApi;
     
-    @MockBean
+    @MockitoBean
     protected EmailContactsApi emailContactsApi;
     
-    @MockBean
+    @MockitoBean
     protected PhoneContactsApi phoneContactsApi;
 
     // Mock Contract Management SDK APIs
-    @MockBean
+    @MockitoBean
     protected ContractsApi contractsApi;
     
-    @MockBean
+    @MockitoBean
     protected GlobalContractPartiesApi globalContractPartiesApi;
 
     // Mock Product Management SDK API
-    @MockBean
+    @MockitoBean
     protected ProductApi productApi;
 
     // Mock Reference Master Data SDK APIs
-    @MockBean
+    @MockitoBean
     protected ContractRoleApi contractRoleApi;
 
-    @MockBean
+    @MockitoBean
     protected ContractRoleScopeApi contractRoleScopeApi;
 
     protected UUID testPartyId;

@@ -1,7 +1,6 @@
 package com.firefly.security.center.core.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.fireflyframework.idp.dtos.enums.UserRoleEnum;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -26,10 +25,10 @@ public final class JwtClaimUtils {
      * Extracts the "userRole" claim from the given JWT token string.
      *
      * @param token a JWT in compact serialization (header.payload.signature)
-     * @return the value of the "userRole" claim as UserRoleEnum, or null if the claim is not present
+     * @return the value of the "userRole" claim, or null if the claim is not present
      * @throws IllegalArgumentException if the token format is invalid or cannot be decoded
      */
-    public static UserRoleEnum extractUserRole(String token) {
+    public static String extractUserRole(String token) {
         if (token == null || token.isBlank()) {
             throw new IllegalArgumentException("Empty token");
         }
@@ -40,7 +39,7 @@ public final class JwtClaimUtils {
         try {
             String payload = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
             String userRole = MAPPER.readTree(payload).path("userRole").asText(null);
-            return userRole != null ? UserRoleEnum.valueOf(userRole) : null;
+            return userRole;
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid token: " + e.getMessage(), e);
         }
