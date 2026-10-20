@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>domain-core-security-center-sdk</artifactId>
+    <name>domain-core-security-center-sdk</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
