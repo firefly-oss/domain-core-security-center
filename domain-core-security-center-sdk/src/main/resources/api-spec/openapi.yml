@@ -11,12 +11,12 @@ info:
   version: 1.0.0
   contact:
     name: Firefly Software Foundation
-    email: dev@getfirefly.io
+    email: dev@fireflysoftware.io
 
 servers:
   - url: http://localhost:8085
     description: Local development server
-  - url: https://api.getfirefly.io/security-center
+  - url: https://api.fireflysoftware.io/security-center
     description: Production server
 
 tags:
