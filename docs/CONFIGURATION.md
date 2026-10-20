@@ -198,9 +198,9 @@ spring:
 ```yaml
 logging:
   level:
-    com.firefly.securitycenter: INFO
-    com.firefly.securitycenter.core: DEBUG        # Core business logic
-    com.firefly.securitycenter.web: INFO          # REST controllers
+    io.fireflysoftware.securitycenter: INFO
+    io.fireflysoftware.securitycenter.core: DEBUG        # Core business logic
+    io.fireflysoftware.securitycenter.web: INFO          # REST controllers
     org.springframework.security: DEBUG           # Spring Security
     org.springframework.cache: DEBUG              # Cache operations
     io.lettuce.core: WARN                         # Redis client
@@ -253,7 +253,7 @@ firefly:
 
 logging:
   level:
-    com.firefly: DEBUG
+    io.fireflysoftware: DEBUG
 ```
 
 ### Production Profile (`application-prod.yml`)
@@ -284,7 +284,7 @@ firefly:
 
 logging:
   level:
-    com.firefly: INFO
+    io.fireflysoftware: INFO
 ```
 
 ### Test Profile (`application-test.yml`)

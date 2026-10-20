@@ -5,13 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.firefly</groupId>
+        <groupId>io.fireflysoftware</groupId>
         <artifactId>domain-core-security-center</artifactId>
-        <version>26.10.2</version>
+        <version>26.10.3</version>
     </parent>
 
     <artifactId>domain-core-security-center-interfaces</artifactId>
-    <version>26.10.2</version>
+    <version>26.10.3</version>
     <packaging>jar</packaging>
 
     <name>Firefly Security Center - Interfaces</name>

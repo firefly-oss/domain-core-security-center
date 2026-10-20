@@ -39,7 +39,7 @@ domain-core-security-center/
 **Usage by other services:**
 ```xml
 <dependency>
-    <groupId>com.firefly</groupId>
+    <groupId>io.fireflysoftware</groupId>
     <artifactId>domain-core-security-center-session</artifactId>
 </dependency>
 ```
@@ -372,9 +372,9 @@ firefly:
 - **Spring Data Redis** - Redis integration
 
 ### IDP Integration
-- **library-idp-keycloak-impl** - Keycloak adapter (`com.firefly.idp.adapter.impl.IdpAdapterImpl`)
-- **library-idp-aws-cognito-impl** - AWS Cognito adapter (`com.firefly.idp.cognito.adapter.CognitoIdpAdapter`)
-- **library-idp-internal-db-impl** - Internal database adapter (`com.firefly.idp.internaldb.adapter.InternalDbIdpAdapter`)
+- **library-idp-keycloak-impl** - Keycloak adapter (`io.fireflysoftware.idp.adapter.impl.IdpAdapterImpl`)
+- **library-idp-aws-cognito-impl** - AWS Cognito adapter (`io.fireflysoftware.idp.cognito.adapter.CognitoIdpAdapter`)
+- **library-idp-internal-db-impl** - Internal database adapter (`io.fireflysoftware.idp.internaldb.adapter.InternalDbIdpAdapter`)
 - **AWS SDK for Java 2.x** - AWS service integration
 - **Keycloak Admin Client** - Keycloak API client
 

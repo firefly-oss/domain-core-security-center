@@ -272,7 +272,7 @@ Other microservices don't call the Security Center's REST API. Instead, they imp
 
 ```xml
 <dependency>
-    <groupId>com.firefly</groupId>
+    <groupId>io.fireflysoftware</groupId>
     <artifactId>domain-core-security-center-session</artifactId>
 </dependency>
 ```
@@ -576,7 +576,7 @@ firefly:
 
 logging:
   level:
-    com.firefly.security.center: DEBUG
+    io.fireflysoftware.security.center: DEBUG
 ```
 
 #### A4. Run Security Center
@@ -899,7 +899,7 @@ Other Firefly microservices import the session library:
 
 ```xml
 <dependency>
-    <groupId>com.firefly</groupId>
+    <groupId>io.fireflysoftware</groupId>
     <artifactId>domain-core-security-center-session</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>

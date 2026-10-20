@@ -478,8 +478,8 @@ redis-cli CONFIG SET maxmemory-policy allkeys-lru
 ```yaml
 logging:
   level:
-    com.firefly.security.center: DEBUG
-    com.firefly.security.center.core.services: TRACE
+    io.fireflysoftware.security.center: DEBUG
+    io.fireflysoftware.security.center.core.services: TRACE
     org.springframework.cache: DEBUG
     io.lettuce.core: DEBUG
 ```

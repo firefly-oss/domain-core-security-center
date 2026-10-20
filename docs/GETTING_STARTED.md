@@ -242,7 +242,7 @@ firefly:
 
 logging:
   level:
-    com.firefly.security.center: DEBUG
+    io.fireflysoftware.security.center: DEBUG
 ```
 
 #### Step 5: Run Security Center
@@ -393,7 +393,7 @@ management:
 
 logging:
   level:
-    com.firefly.security.center: INFO
+    io.fireflysoftware.security.center: INFO
     org.springframework.web: WARN
 ```
 
@@ -501,7 +501,7 @@ Add to your service's `pom.xml`:
 
 ```xml
 <dependency>
-    <groupId>com.firefly</groupId>
+    <groupId>io.fireflysoftware</groupId>
     <artifactId>domain-core-security-center-session</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>
@@ -808,7 +808,7 @@ server:
 ```yaml
 logging:
   level:
-    com.firefly.security.center: DEBUG
+    io.fireflysoftware.security.center: DEBUG
     org.springframework.web: DEBUG
     reactor.netty: DEBUG
 ```

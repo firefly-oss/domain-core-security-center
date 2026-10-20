@@ -5,9 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.firefly</groupId>
+        <groupId>io.fireflysoftware</groupId>
         <artifactId>firefly-parent</artifactId>
-        <version>26.10.2</version>
+        <version>26.10.3</version>
         <relativePath/>
     </parent>
 
@@ -30,34 +30,34 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.compiler.release>${java.version}</maven.compiler.release>
-        <domain-core-security-center.version>26.10.2</domain-core-security-center.version>
+        <domain-core-security-center.version>26.10.3</domain-core-security-center.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
             <!-- Internal modules -->
             <dependency>
-                <groupId>com.firefly</groupId>
+                <groupId>io.fireflysoftware</groupId>
                 <artifactId>domain-core-security-center-interfaces</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.firefly</groupId>
+                <groupId>io.fireflysoftware</groupId>
                 <artifactId>domain-core-security-center-session</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.firefly</groupId>
+                <groupId>io.fireflysoftware</groupId>
                 <artifactId>domain-core-security-center-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.firefly</groupId>
+                <groupId>io.fireflysoftware</groupId>
                 <artifactId>domain-core-security-center-web</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.firefly</groupId>
+                <groupId>io.fireflysoftware</groupId>
                 <artifactId>domain-core-security-center-sdk</artifactId>
                 <version>${project.version}</version>
             </dependency>

@@ -1,1 +1,1 @@
-com.firefly.security.center.core.config.SessionCacheAutoConfiguration
+io.fireflysoftware.security.center.core.config.SessionCacheAutoConfiguration
