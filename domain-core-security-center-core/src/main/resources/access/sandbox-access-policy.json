@@ -1,5 +1,5 @@
 {
-  "description": "Sandbox access policy for OpenPlatform sample journeys. Replace this file for a real deployment. The sample actor may READ and CREATE the sample resources. The second actor is denied.",
+  "description": "Sandbox access policy for OpenPlatform sample journeys. Replace this file for a real deployment. The sample customer may READ and CREATE the sample resources. The sample employee may READ those resources and may ADMINISTER and IMPERSONATE. The denied actor has no grants.",
   "actors": [
     {
       "actorId": "11111111-1111-4111-8111-111111111111",
@@ -21,6 +21,36 @@
         { "action": "CREATE", "resourceType": "CONTRACT", "resourceId": "10000000-0000-4000-8000-000000000007" },
         { "action": "READ", "resourceType": "PRODUCT", "resourceId": "10000000-0000-4000-8000-000000000008" },
         { "action": "CREATE", "resourceType": "PRODUCT", "resourceId": "10000000-0000-4000-8000-000000000008" }
+      ]
+    },
+    {
+      "actorId": "33333333-3333-4333-8333-333333333333",
+      "label": "sample-employee",
+      "grants": [
+        { "action": "READ", "resourceType": "PARTY", "resourceId": "10000000-0000-4000-8000-000000000001" },
+        { "action": "READ", "resourceType": "ACCOUNT", "resourceId": "10000000-0000-4000-8000-000000000002" },
+        { "action": "READ", "resourceType": "CARD", "resourceId": "10000000-0000-4000-8000-000000000003" },
+        { "action": "READ", "resourceType": "APPLICATION", "resourceId": "10000000-0000-4000-8000-000000000004" },
+        { "action": "READ", "resourceType": "POLICY", "resourceId": "10000000-0000-4000-8000-000000000005" },
+        { "action": "READ", "resourceType": "CLAIM", "resourceId": "10000000-0000-4000-8000-000000000006" },
+        { "action": "READ", "resourceType": "CONTRACT", "resourceId": "10000000-0000-4000-8000-000000000007" },
+        { "action": "READ", "resourceType": "PRODUCT", "resourceId": "10000000-0000-4000-8000-000000000008" },
+        { "action": "ADMINISTER", "resourceType": "PARTY", "resourceId": "*" },
+        { "action": "IMPERSONATE", "resourceType": "PARTY", "resourceId": "*" },
+        { "action": "ADMINISTER", "resourceType": "ACCOUNT", "resourceId": "*" },
+        { "action": "IMPERSONATE", "resourceType": "ACCOUNT", "resourceId": "*" },
+        { "action": "ADMINISTER", "resourceType": "CARD", "resourceId": "*" },
+        { "action": "IMPERSONATE", "resourceType": "CARD", "resourceId": "*" },
+        { "action": "ADMINISTER", "resourceType": "APPLICATION", "resourceId": "*" },
+        { "action": "IMPERSONATE", "resourceType": "APPLICATION", "resourceId": "*" },
+        { "action": "ADMINISTER", "resourceType": "POLICY", "resourceId": "*" },
+        { "action": "IMPERSONATE", "resourceType": "POLICY", "resourceId": "*" },
+        { "action": "ADMINISTER", "resourceType": "CLAIM", "resourceId": "*" },
+        { "action": "IMPERSONATE", "resourceType": "CLAIM", "resourceId": "*" },
+        { "action": "ADMINISTER", "resourceType": "CONTRACT", "resourceId": "*" },
+        { "action": "IMPERSONATE", "resourceType": "CONTRACT", "resourceId": "*" },
+        { "action": "ADMINISTER", "resourceType": "PRODUCT", "resourceId": "*" },
+        { "action": "IMPERSONATE", "resourceType": "PRODUCT", "resourceId": "*" }
       ]
     },
     {

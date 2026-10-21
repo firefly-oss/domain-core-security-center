@@ -24,5 +24,7 @@ public enum AccessAction {
     CREATE,
     UPDATE,
     CLOSE,
-    DECIDE
+    DECIDE,
+    ADMINISTER,
+    IMPERSONATE
 }

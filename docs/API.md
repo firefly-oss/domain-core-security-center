@@ -40,7 +40,7 @@ http://localhost:8085/api/v1/access/checks
 }
 ```
 
-`sample-journey` is actor `11111111-1111-4111-8111-111111111111`. `denied-actor` is actor `22222222-2222-4222-8222-222222222222`.
+`sample-journey` is actor `11111111-1111-4111-8111-111111111111`. `sample-employee` is actor `33333333-3333-4333-8333-333333333333`. `denied-actor` is actor `22222222-2222-4222-8222-222222222222`.
 
 `firefly.security-center.identity.adapter` selects `sandbox` (default), `keycloak`, `cognito`, or `internal-db`. Keycloak is Jafly artifact `org.fireflyframework:fireflyframework-security-idp-keycloak`, type `org.fireflyframework.security.idp.adapter.impl.IdpAdapterImpl`, bean `idpAdapter`. Replace the `IdentityPort` bean to supply another provider.
 
@@ -62,7 +62,7 @@ http://localhost:8085/api/v1/access/checks
 | Field | Required | Values |
 | --- | --- | --- |
 | `actorId` | yes | Actor identifier. Comparison ignores case and surrounding spaces. |
-| `action` | yes | `READ`, `CREATE`, `UPDATE`, `CLOSE`, `DECIDE` |
+| `action` | yes | `READ`, `CREATE`, `UPDATE`, `CLOSE`, `DECIDE`, `ADMINISTER`, `IMPERSONATE` |
 | `resourceType` | yes | `PARTY`, `ACCOUNT`, `CARD`, `APPLICATION`, `POLICY`, `CLAIM`, `CONTRACT`, `PRODUCT` |
 | `resourceId` | yes | Resource identifier. Comparison ignores case and surrounding spaces. |
 
@@ -99,7 +99,7 @@ The shipped adapter reads a policy file and does not call an identity provider.
 
 `firefly.security-center.access.sandbox-policy` defaults to `classpath:access/sandbox-access-policy.json`. Point it at a `file:` location to use a copy outside the archive. Restart after the replacement.
 
-The sample actor `11111111-1111-4111-8111-111111111111` may `READ` and `CREATE` these resources. The second actor `22222222-2222-4222-8222-222222222222` is denied.
+The sample customer `11111111-1111-4111-8111-111111111111` may `READ` and `CREATE` these resources, and may not `ADMINISTER` or `IMPERSONATE`. The sample employee `33333333-3333-4333-8333-333333333333` may `READ` these resources and may `ADMINISTER` and `IMPERSONATE`. The denied actor `22222222-2222-4222-8222-222222222222` has no grants.
 
 | Resource type | Sample resource id |
 | --- | --- |

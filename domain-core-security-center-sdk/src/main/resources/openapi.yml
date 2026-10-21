@@ -395,8 +395,8 @@ paths:
       operationId: resolveSubject
       summary: Authenticate or resolve the actor
       description: "IdentityPort. Returns the subject AccessPort evaluates. Does not\
-        \ call an identity provider from the caller. Sandbox usernames are sample-journey\
-        \ and denied-actor."
+        \ call an identity provider from the caller. Sandbox usernames are sample-journey,\
+        \ sample-employee, and denied-actor."
       requestBody:
         required: true
         content:
@@ -794,6 +794,8 @@ components:
           - UPDATE
           - CLOSE
           - DECIDE
+          - ADMINISTER
+          - IMPERSONATE
         resourceType:
           type: string
           enum:
@@ -829,7 +831,7 @@ components:
       properties:
         username:
           type: string
-          description: Username to authenticate. Sandbox values are sample-journey and denied-actor.
+          description: Username to authenticate. Sandbox values are sample-journey, sample-employee, and denied-actor.
         actorId:
           type: string
           description: Actor id to resolve when username is omitted.

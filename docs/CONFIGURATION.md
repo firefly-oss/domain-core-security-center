@@ -70,7 +70,7 @@ firefly:
 
 `adapter` is `sandbox` or `session-grants`. `sandbox-policy` may be a `classpath:` location or a `file:` location. Restart after replacing the file.
 
-The shipped file lets actor `11111111-1111-4111-8111-111111111111` read and create the sample resources, and denies actor `22222222-2222-4222-8222-222222222222`. The request and response are documented in the README under Access decisions.
+The shipped file lets actor `11111111-1111-4111-8111-111111111111` read and create the sample resources, lets actor `33333333-3333-4333-8333-333333333333` read those resources and administer or impersonate, and denies actor `22222222-2222-4222-8222-222222222222`. The request and response are documented in the README under Access decisions.
 
 ## Identity Provider Configuration
 

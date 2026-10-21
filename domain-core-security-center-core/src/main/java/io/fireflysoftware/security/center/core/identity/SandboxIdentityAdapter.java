@@ -33,8 +33,10 @@ public final class SandboxIdentityAdapter implements IdentityPort {
     public static final String PROVIDER = "sandbox";
     public static final String SAMPLE_USERNAME = "sample-journey";
     public static final String DENIED_USERNAME = "denied-actor";
+    public static final String EMPLOYEE_USERNAME = "sample-employee";
     public static final String SAMPLE_ACTOR_ID = "11111111-1111-4111-8111-111111111111";
     public static final String DENIED_ACTOR_ID = "22222222-2222-4222-8222-222222222222";
+    public static final String EMPLOYEE_ACTOR_ID = "33333333-3333-4333-8333-333333333333";
 
     @Override
     public Mono<Subject> authenticate(IdentityRequest request) {
@@ -56,6 +58,9 @@ public final class SandboxIdentityAdapter implements IdentityPort {
         if (DENIED_ACTOR_ID.equals(normalized)) {
             return Mono.just(subject(DENIED_ACTOR_ID));
         }
+        if (EMPLOYEE_ACTOR_ID.equals(normalized)) {
+            return Mono.just(subject(EMPLOYEE_ACTOR_ID));
+        }
         return Mono.empty();
     }
 
@@ -66,6 +71,9 @@ public final class SandboxIdentityAdapter implements IdentityPort {
         }
         if (DENIED_USERNAME.equals(normalized)) {
             return Mono.just(subject(DENIED_ACTOR_ID));
+        }
+        if (EMPLOYEE_USERNAME.equals(normalized)) {
+            return Mono.just(subject(EMPLOYEE_ACTOR_ID));
         }
         return Mono.empty();
     }

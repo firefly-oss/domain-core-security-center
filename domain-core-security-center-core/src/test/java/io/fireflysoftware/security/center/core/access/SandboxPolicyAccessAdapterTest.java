@@ -38,6 +38,7 @@ class SandboxPolicyAccessAdapterTest {
 
     static final String SAMPLE_ACTOR = "11111111-1111-4111-8111-111111111111";
     static final String DENIED_ACTOR = "22222222-2222-4222-8222-222222222222";
+    static final String EMPLOYEE_ACTOR = "33333333-3333-4333-8333-333333333333";
 
     static final Map<AccessResourceType, String> SAMPLE_RESOURCES = Map.of(
             AccessResourceType.PARTY, "10000000-0000-4000-8000-000000000001",
@@ -77,8 +78,8 @@ class SandboxPolicyAccessAdapterTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = AccessAction.class, names = {"UPDATE", "CLOSE", "DECIDE"})
-    void sampleActorMayNotUpdateCloseOrDecide(AccessAction action) {
+    @EnumSource(value = AccessAction.class, names = {"UPDATE", "CLOSE", "DECIDE", "ADMINISTER", "IMPERSONATE"})
+    void sampleActorMayNotStaffOrLifecycleActions(AccessAction action) {
         assertDecision(
                 shipped,
                 request(SAMPLE_ACTOR, action, AccessResourceType.ACCOUNT, SAMPLE_RESOURCES.get(AccessResourceType.ACCOUNT)),
@@ -113,9 +114,38 @@ class SandboxPolicyAccessAdapterTest {
     void unknownActorIsDenied() {
         assertDecision(
                 shipped,
-                request("33333333-3333-4333-8333-333333333333", AccessAction.READ, AccessResourceType.PARTY, SAMPLE_RESOURCES.get(AccessResourceType.PARTY)),
+                request("44444444-4444-4444-8444-444444444444", AccessAction.READ, AccessResourceType.PARTY, SAMPLE_RESOURCES.get(AccessResourceType.PARTY)),
                 false,
                 AccessDecision.ACTOR_UNKNOWN);
+    }
+
+    @ParameterizedTest
+    @EnumSource(AccessResourceType.class)
+    void employeeMayReadEachSampleResource(AccessResourceType resourceType) {
+        assertDecision(
+                shipped,
+                request(EMPLOYEE_ACTOR, AccessAction.READ, resourceType, SAMPLE_RESOURCES.get(resourceType)),
+                true,
+                AccessDecision.SANDBOX_GRANT);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = AccessAction.class, names = {"ADMINISTER", "IMPERSONATE"})
+    void employeeMayAdministerAndImpersonate(AccessAction action) {
+        assertDecision(
+                shipped,
+                request(EMPLOYEE_ACTOR, action, AccessResourceType.ACCOUNT, SAMPLE_RESOURCES.get(AccessResourceType.ACCOUNT)),
+                true,
+                AccessDecision.SANDBOX_GRANT);
+    }
+
+    @Test
+    void employeeMayNotCreate() {
+        assertDecision(
+                shipped,
+                request(EMPLOYEE_ACTOR, AccessAction.CREATE, AccessResourceType.ACCOUNT, SAMPLE_RESOURCES.get(AccessResourceType.ACCOUNT)),
+                false,
+                AccessDecision.ACTION_NOT_GRANTED);
     }
 
     @Test

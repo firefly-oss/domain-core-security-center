@@ -46,7 +46,12 @@ class SubjectBoundAccessAdapterTest {
         assertDecision(access, SandboxIdentityAdapter.SAMPLE_ACTOR_ID, AccessAction.READ, true, AccessDecision.SANDBOX_GRANT);
         assertDecision(access, SandboxIdentityAdapter.SAMPLE_ACTOR_ID, AccessAction.CREATE, true, AccessDecision.SANDBOX_GRANT);
         assertDecision(access, SandboxIdentityAdapter.DENIED_ACTOR_ID, AccessAction.READ, false, AccessDecision.ACTOR_NOT_ENTITLED);
-        assertDecision(access, "33333333-3333-4333-8333-333333333333", AccessAction.READ, false, AccessDecision.ACTOR_UNKNOWN);
+        assertDecision(access, SandboxIdentityAdapter.SAMPLE_ACTOR_ID, AccessAction.ADMINISTER, false, AccessDecision.ACTION_NOT_GRANTED);
+        assertDecision(access, SandboxIdentityAdapter.SAMPLE_ACTOR_ID, AccessAction.IMPERSONATE, false, AccessDecision.ACTION_NOT_GRANTED);
+        assertDecision(access, SandboxIdentityAdapter.EMPLOYEE_ACTOR_ID, AccessAction.READ, true, AccessDecision.SANDBOX_GRANT);
+        assertDecision(access, SandboxIdentityAdapter.EMPLOYEE_ACTOR_ID, AccessAction.ADMINISTER, true, AccessDecision.SANDBOX_GRANT);
+        assertDecision(access, SandboxIdentityAdapter.EMPLOYEE_ACTOR_ID, AccessAction.IMPERSONATE, true, AccessDecision.SANDBOX_GRANT);
+        assertDecision(access, "44444444-4444-4444-8444-444444444444", AccessAction.READ, false, AccessDecision.ACTOR_UNKNOWN);
     }
 
     @Test

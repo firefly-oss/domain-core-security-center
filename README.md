@@ -861,7 +861,7 @@ Resolve an existing actor:
 
 | Field | Required | Values |
 | --- | --- | --- |
-| `username` | one of username or actorId | Sandbox usernames are `sample-journey` and `denied-actor`. |
+| `username` | one of username or actorId | Sandbox usernames are `sample-journey`, `sample-employee`, and `denied-actor`. |
 | `actorId` | one of username or actorId | Subject identifier returned by a previous call. |
 | `password` | no | Passed only to the selected Jafly adapter. The sandbox adapter does not read it. Do not commit a password. |
 
@@ -881,7 +881,7 @@ Resolve an existing actor:
 | `provider` | `sandbox`, `keycloak`, `cognito`, or `internal-db`. |
 | `roles` | Realm role names from the identity provider. Empty for the sandbox subjects. |
 
-`sample-journey` resolves to actor `11111111-1111-4111-8111-111111111111`. `denied-actor` resolves to actor `22222222-2222-4222-8222-222222222222`. Any other username is unknown. No identity-provider process is required.
+`sample-journey` resolves to actor `11111111-1111-4111-8111-111111111111`. `sample-employee` resolves to actor `33333333-3333-4333-8333-333333333333`. `denied-actor` resolves to actor `22222222-2222-4222-8222-222222222222`. Any other username is unknown. No identity-provider process is required.
 
 ### Selecting the adapter
 
@@ -939,7 +939,7 @@ Both outcomes return HTTP 200. A denied decision is still a successful answer, a
 | Field | Required | Values |
 | --- | --- | --- |
 | `actorId` | yes | Actor identifier. Comparison ignores case and surrounding spaces. |
-| `action` | yes | `READ`, `CREATE`, `UPDATE`, `CLOSE`, `DECIDE` |
+| `action` | yes | `READ`, `CREATE`, `UPDATE`, `CLOSE`, `DECIDE`, `ADMINISTER`, `IMPERSONATE` |
 | `resourceType` | yes | `PARTY`, `ACCOUNT`, `CARD`, `APPLICATION`, `POLICY`, `CLAIM`, `CONTRACT`, `PRODUCT` |
 | `resourceId` | yes | Resource identifier. Comparison ignores case and surrounding spaces. |
 
@@ -976,12 +976,13 @@ The shipped adapter is `SandboxPolicyAccessAdapter`. It reads a policy file and 
 
 The process reads `firefly.security-center.access.sandbox-policy`, which defaults to `classpath:access/sandbox-access-policy.json`. Point that property at a `file:` location to use a copy outside the archive. The same document shape applies.
 
-The shipped file allows the sample actor to `READ` and `CREATE` the sample resources below, and denies the second actor for every action. `UPDATE`, `CLOSE`, and `DECIDE` are not granted to the sample actor. A `resourceId` of `*` in a replacement file covers every identifier of that type.
+The shipped file allows the sample customer to `READ` and `CREATE` the sample resources below, and does not grant that actor `ADMINISTER` or `IMPERSONATE`. The sample employee may `READ` those resources and may `ADMINISTER` and `IMPERSONATE` every resource of those types (`resourceId` `*`). The denied actor has no grants. `UPDATE`, `CLOSE`, and `DECIDE` are not granted to the sample customer. A `resourceId` of `*` in a replacement file covers every identifier of that type.
 
 | Role | Actor id |
 | --- | --- |
-| Sample journey actor | `11111111-1111-4111-8111-111111111111` |
-| Denied actor | `22222222-2222-4222-8222-222222222222` |
+| Sample customer (`sample-journey`) | `11111111-1111-4111-8111-111111111111` |
+| Sample employee (`sample-employee`) | `33333333-3333-4333-8333-333333333333` |
+| Denied actor (`denied-actor`) | `22222222-2222-4222-8222-222222222222` |
 
 | Resource type | Sample resource id |
 | --- | --- |
@@ -1124,10 +1125,10 @@ public class AccountController {
 
 ```
 ├── Core Module:
-│   ├── SandboxPolicyAccessAdapterTest: 28 tests
+│   ├── SandboxPolicyAccessAdapterTest: 41 tests
 │   ├── SubjectBoundAccessAdapterTest: 2 tests
 │   ├── SessionGrantAccessAdapterTest: 9 tests
-│   ├── SandboxIdentityAdapterTest: 4 tests
+│   ├── SandboxIdentityAdapterTest: 5 tests
 │   ├── JaflyIdentityAdapterTest: 2 tests
 │   ├── ContractResolverServiceTest: 8 tests
 │   └── CustomerResolverServiceTest: 9 tests
