@@ -16,6 +16,7 @@
 
 package io.fireflysoftware.security.center.web.controllers;
 
+import io.fireflysoftware.security.center.interfaces.identity.IdentityAdapter;
 import io.fireflysoftware.security.center.interfaces.identity.Subject;
 import io.fireflysoftware.security.center.session.IdentityPort;
 import org.junit.jupiter.api.Test;
@@ -36,7 +37,7 @@ class IdentityControllerTest {
         IdentityPort port = mock(IdentityPort.class);
         when(port.authenticate(any())).thenReturn(Mono.just(Subject.builder()
                 .actorId("11111111-1111-4111-8111-111111111111")
-                .provider("sandbox")
+                .provider(IdentityAdapter.SANDBOX)
                 .roles(List.of())
                 .build()));
 

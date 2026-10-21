@@ -16,6 +16,7 @@
 
 package io.fireflysoftware.security.center.core.identity;
 
+import io.fireflysoftware.security.center.interfaces.identity.IdentityAdapter;
 import io.fireflysoftware.security.center.interfaces.identity.IdentityRequest;
 import org.fireflyframework.security.idp.adapter.IdpAdapter;
 import org.fireflyframework.security.idp.dtos.LoginRequest;
@@ -45,12 +46,12 @@ class JaflyIdentityAdapterTest {
                 UserInfoResponse.builder().sub("user-subject").preferredUsername("user").build())));
         when(idpAdapter.getRoles("user-subject")).thenReturn(Mono.just(ResponseEntity.ok(List.of("account-reader"))));
 
-        JaflyIdentityAdapter adapter = new JaflyIdentityAdapter(idpAdapter, "keycloak");
+        JaflyIdentityAdapter adapter = new JaflyIdentityAdapter(idpAdapter, IdentityAdapter.KEYCLOAK);
 
         StepVerifier.create(adapter.authenticate(IdentityRequest.builder().username("user").password("secret").build()))
                 .assertNext(subject -> {
                     assertThat(subject.getActorId()).isEqualTo("user-subject");
-                    assertThat(subject.getProvider()).isEqualTo("keycloak");
+                    assertThat(subject.getProvider()).isEqualTo(IdentityAdapter.KEYCLOAK);
                     assertThat(subject.getRoles()).containsExactly("account-reader");
                 })
                 .verifyComplete();
@@ -63,12 +64,12 @@ class JaflyIdentityAdapterTest {
         IdpAdapter idpAdapter = mock(IdpAdapter.class);
         when(idpAdapter.getRoles("actor-1")).thenReturn(Mono.error(new UnsupportedOperationException("getRoles")));
 
-        JaflyIdentityAdapter adapter = new JaflyIdentityAdapter(idpAdapter, "cognito");
+        JaflyIdentityAdapter adapter = new JaflyIdentityAdapter(idpAdapter, IdentityAdapter.COGNITO);
 
         StepVerifier.create(adapter.resolve("actor-1"))
                 .assertNext(subject -> {
                     assertThat(subject.getActorId()).isEqualTo("actor-1");
-                    assertThat(subject.getProvider()).isEqualTo("cognito");
+                    assertThat(subject.getProvider()).isEqualTo(IdentityAdapter.COGNITO);
                     assertThat(subject.getRoles()).isEmpty();
                 })
                 .verifyComplete();

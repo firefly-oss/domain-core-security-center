@@ -45,9 +45,9 @@ public class Subject {
     @JsonProperty("actorId")
     private String actorId;
 
-    /** sandbox, keycloak, cognito, or internal-db. */
+    /** sandbox, keycloak, cognito, or internal-db. JSON uses that property token. */
     @JsonProperty("provider")
-    private String provider;
+    private IdentityAdapter provider;
 
     /** Realm roles from the identity provider. Empty when the provider has none. */
     @JsonProperty("roles")

@@ -16,6 +16,7 @@
 
 package io.fireflysoftware.security.center.core.identity;
 
+import io.fireflysoftware.security.center.interfaces.identity.IdentityAdapter;
 import io.fireflysoftware.security.center.interfaces.identity.IdentityRequest;
 import io.fireflysoftware.security.center.interfaces.identity.Subject;
 import io.fireflysoftware.security.center.session.IdentityPort;
@@ -39,11 +40,11 @@ import java.util.List;
 public final class JaflyIdentityAdapter implements IdentityPort {
 
     private final IdpAdapter idpAdapter;
-    private final String provider;
+    private final IdentityAdapter adapter;
 
-    public JaflyIdentityAdapter(IdpAdapter idpAdapter, String provider) {
+    public JaflyIdentityAdapter(IdpAdapter idpAdapter, IdentityAdapter adapter) {
         this.idpAdapter = idpAdapter;
-        this.provider = provider;
+        this.adapter = adapter;
     }
 
     @Override
@@ -94,7 +95,7 @@ public final class JaflyIdentityAdapter implements IdentityPort {
     private Subject subject(String actorId, List<String> roles) {
         return Subject.builder()
                 .actorId(actorId)
-                .provider(provider)
+                .provider(adapter)
                 .roles(roles == null ? List.of() : roles)
                 .build();
     }

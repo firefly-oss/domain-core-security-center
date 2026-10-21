@@ -18,6 +18,7 @@ package io.fireflysoftware.security.center.core.services;
 
 import io.fireflysoftware.core.customer.sdk.api.*;
 import io.fireflysoftware.core.customer.sdk.model.*;
+import io.fireflysoftware.security.center.interfaces.dtos.PartyKind;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -88,7 +89,7 @@ class CustomerResolverServiceTest {
                 .assertNext(customer -> {
                     assertThat(customer).isNotNull();
                     assertThat(customer.getPartyId()).isEqualTo(testPartyId);
-                    assertThat(customer.getPartyKind()).isEqualTo("INDIVIDUAL");
+                    assertThat(customer.getPartyKind()).isEqualTo(PartyKind.INDIVIDUAL);
                     assertThat(customer.getTenantId()).isEqualTo(testTenantId);
                     assertThat(customer.getFullName()).isEqualTo("John Michael Doe Smith");
                     assertThat(customer.getEmail()).isEqualTo("john.doe@example.com");
@@ -121,7 +122,7 @@ class CustomerResolverServiceTest {
                 .assertNext(customer -> {
                     assertThat(customer).isNotNull();
                     assertThat(customer.getPartyId()).isEqualTo(testPartyId);
-                    assertThat(customer.getPartyKind()).isEqualTo("ORGANIZATION");
+                    assertThat(customer.getPartyKind()).isEqualTo(PartyKind.ORGANIZATION);
                     assertThat(customer.getFullName()).isEqualTo("Acme Corporation");
                     assertThat(customer.getEmail()).isEqualTo("contact@company.com");
                     assertThat(customer.getPhoneNumber()).isEqualTo("+9876543210");

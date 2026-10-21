@@ -16,6 +16,7 @@
 
 package io.fireflysoftware.security.center.core.identity;
 
+import io.fireflysoftware.security.center.interfaces.identity.IdentityAdapter;
 import io.fireflysoftware.security.center.interfaces.identity.IdentityRequest;
 import io.fireflysoftware.security.center.interfaces.identity.Subject;
 import org.junit.jupiter.api.Test;
@@ -39,7 +40,7 @@ class SandboxIdentityAdapterTest {
         StepVerifier.create(adapter.authenticate(IdentityRequest.builder().username("denied-actor").build()))
                 .assertNext(subject -> {
                     assertThat(subject.getActorId()).isEqualTo(SandboxIdentityAdapter.DENIED_ACTOR_ID);
-                    assertThat(subject.getProvider()).isEqualTo("sandbox");
+                    assertThat(subject.getProvider()).isEqualTo(IdentityAdapter.SANDBOX);
                     assertThat(subject.getRoles()).isEmpty();
                 })
                 .verifyComplete();
@@ -57,7 +58,7 @@ class SandboxIdentityAdapterTest {
         StepVerifier.create(adapter.authenticate(IdentityRequest.builder().username("sample-employee").build()))
                 .assertNext(subject -> {
                     assertThat(subject.getActorId()).isEqualTo(SandboxIdentityAdapter.EMPLOYEE_ACTOR_ID);
-                    assertThat(subject.getProvider()).isEqualTo("sandbox");
+                    assertThat(subject.getProvider()).isEqualTo(IdentityAdapter.SANDBOX);
                 })
                 .verifyComplete();
         StepVerifier.create(adapter.resolve(SandboxIdentityAdapter.EMPLOYEE_ACTOR_ID))
@@ -75,7 +76,7 @@ class SandboxIdentityAdapterTest {
 
     private void assertSample(Subject subject) {
         assertThat(subject.getActorId()).isEqualTo(SandboxIdentityAdapter.SAMPLE_ACTOR_ID);
-        assertThat(subject.getProvider()).isEqualTo("sandbox");
+        assertThat(subject.getProvider()).isEqualTo(IdentityAdapter.SANDBOX);
         assertThat(subject.getRoles()).isEmpty();
     }
 }

@@ -17,6 +17,7 @@
 package io.fireflysoftware.security.center.core.access;
 
 import io.fireflysoftware.security.center.core.identity.SandboxIdentityAdapter;
+import io.fireflysoftware.security.center.interfaces.identity.IdentityAdapter;
 import io.fireflysoftware.security.center.interfaces.access.AccessAction;
 import io.fireflysoftware.security.center.interfaces.access.AccessDecision;
 import io.fireflysoftware.security.center.interfaces.access.AccessRequest;
@@ -81,7 +82,7 @@ class SubjectBoundAccessAdapterTest {
             public Mono<Subject> resolve(String actorId) {
                 return Mono.just(Subject.builder()
                         .actorId(actorId)
-                        .provider("keycloak")
+                        .provider(IdentityAdapter.KEYCLOAK)
                         .roles(List.of("account-reader"))
                         .build());
             }

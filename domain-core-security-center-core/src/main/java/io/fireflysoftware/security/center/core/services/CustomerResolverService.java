@@ -19,6 +19,7 @@ package io.fireflysoftware.security.center.core.services;
 import io.fireflysoftware.core.customer.sdk.api.*;
 import io.fireflysoftware.core.customer.sdk.model.*;
 import io.fireflysoftware.security.center.interfaces.dtos.CustomerInfoDTO;
+import io.fireflysoftware.security.center.interfaces.dtos.PartyKind;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -83,7 +84,7 @@ public class CustomerResolverService {
      */
     private Mono<CustomerInfoDTO> enrichCustomerInfo(PartyDTO party) {
         UUID partyId = party.getPartyId();
-        String partyKind = party.getPartyKind() != null ? party.getPartyKind().getValue() : "UNKNOWN";
+        PartyKind partyKind = toPartyKind(party.getPartyKind());
 
         // Fetch full name (required)
         return fetchFullName(partyId, partyKind)
@@ -112,24 +113,34 @@ public class CustomerResolverService {
     }
 
     /**
-     * Fetches full name based on party kind (NATURAL_PERSON or LEGAL_ENTITY).
+     * Fetches full name based on party kind.
      */
-    private Mono<String> fetchFullName(UUID partyId, String partyKind) {
-        if ("INDIVIDUAL".equalsIgnoreCase(partyKind)) {
+    private Mono<String> fetchFullName(UUID partyId, PartyKind partyKind) {
+        if (partyKind == PartyKind.INDIVIDUAL) {
             return naturalPersonsApi.getNaturalPersonByPartyId(partyId, UUID.randomUUID().toString())
                     .map(this::buildFullNameFromNaturalPerson)
                     .doOnSuccess(name -> log.debug("Fetched natural person name for partyId: {}", partyId))
                     .doOnError(error -> log.error("Failed to fetch natural person for partyId: {}", partyId, error));
-        } else if ("ORGANIZATION".equalsIgnoreCase(partyKind)) {
+        }
+        if (partyKind == PartyKind.ORGANIZATION) {
             return legalEntitiesApi.getLegalEntityByPartyId(partyId, UUID.randomUUID().toString())
                     .map(this::buildFullNameFromLegalEntity)
                     .doOnSuccess(name -> log.debug("Fetched legal entity name for partyId: {}", partyId))
                     .doOnError(error -> log.error("Failed to fetch legal entity for partyId: {}", partyId, error));
-        } else {
-            return Mono.error(new IllegalArgumentException(
-                    "Unknown party kind: " + partyKind + " for partyId: " + partyId +
-                    ". Expected 'INDIVIDUAL' or 'ORGANIZATION'."));
         }
+        return Mono.error(new IllegalArgumentException(
+                "Unknown party kind: " + partyKind + " for partyId: " + partyId +
+                ". Expected INDIVIDUAL or ORGANIZATION."));
+    }
+
+    private static PartyKind toPartyKind(PartyDTO.PartyKindEnum kind) {
+        if (kind == null) {
+            return null;
+        }
+        return switch (kind) {
+            case INDIVIDUAL -> PartyKind.INDIVIDUAL;
+            case ORGANIZATION -> PartyKind.ORGANIZATION;
+        };
     }
 
     /**

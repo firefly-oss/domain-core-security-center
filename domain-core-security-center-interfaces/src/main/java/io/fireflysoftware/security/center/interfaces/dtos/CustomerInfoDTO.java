@@ -37,7 +37,7 @@ public class CustomerInfoDTO {
     private UUID partyId;
 
     @JsonProperty("partyKind")
-    private String partyKind; // NATURAL_PERSON or LEGAL_ENTITY
+    private PartyKind partyKind;
 
     @JsonProperty("tenantId")
     private UUID tenantId;

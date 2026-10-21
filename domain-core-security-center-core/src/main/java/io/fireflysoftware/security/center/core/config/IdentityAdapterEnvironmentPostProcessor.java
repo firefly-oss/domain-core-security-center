@@ -16,6 +16,7 @@
 
 package io.fireflysoftware.security.center.core.config;
 
+import io.fireflysoftware.security.center.interfaces.identity.IdentityAdapter;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.Ordered;
@@ -36,11 +37,12 @@ public class IdentityAdapterEnvironmentPostProcessor implements EnvironmentPostP
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
-        String adapter = environment.getProperty(ADAPTER, "sandbox");
+        IdentityAdapter adapter = IdentityAdapter.fromProperty(environment.getProperty(ADAPTER, "sandbox"));
+        String token = adapter.propertyValue();
         Map<String, Object> values = new HashMap<>();
-        values.put("firefly.security-center.idp.provider", adapter);
-        if (!"sandbox".equals(adapter)) {
-            values.put("firefly.security.idp.provider", adapter);
+        values.put("firefly.security-center.idp.provider", token);
+        if (adapter != IdentityAdapter.SANDBOX) {
+            values.put("firefly.security.idp.provider", token);
         }
         environment.getPropertySources().addFirst(new MapPropertySource("firefly-identity-adapter", values));
     }

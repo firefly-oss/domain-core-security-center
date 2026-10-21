@@ -16,6 +16,7 @@
 
 package io.fireflysoftware.security.center.core.identity;
 
+import io.fireflysoftware.security.center.interfaces.identity.IdentityAdapter;
 import io.fireflysoftware.security.center.interfaces.identity.IdentityRequest;
 import io.fireflysoftware.security.center.interfaces.identity.Subject;
 import io.fireflysoftware.security.center.session.IdentityPort;
@@ -30,7 +31,6 @@ import java.util.Locale;
  */
 public final class SandboxIdentityAdapter implements IdentityPort {
 
-    public static final String PROVIDER = "sandbox";
     public static final String SAMPLE_USERNAME = "sample-journey";
     public static final String DENIED_USERNAME = "denied-actor";
     public static final String EMPLOYEE_USERNAME = "sample-employee";
@@ -81,7 +81,7 @@ public final class SandboxIdentityAdapter implements IdentityPort {
     private static Subject subject(String actorId) {
         return Subject.builder()
                 .actorId(actorId)
-                .provider(PROVIDER)
+                .provider(IdentityAdapter.SANDBOX)
                 .roles(List.of())
                 .build();
     }
