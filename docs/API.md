@@ -17,6 +17,105 @@ http://localhost:8085/api/v1/auth
 http://localhost:8085/api/v1/sessions
 ```
 
+**Access decisions:**
+```
+http://localhost:8085/api/v1/access/checks
+```
+
+## Identity
+
+`POST /api/v1/identity/subjects` is the IdentityPort contract. The controller does not call Keycloak. HTTP 200 returns the subject. HTTP 404 means the subject is unknown. HTTP 400 means both `username` and `actorId` are missing.
+
+```json
+{
+  "username": "sample-journey"
+}
+```
+
+```json
+{
+  "actorId": "11111111-1111-4111-8111-111111111111",
+  "provider": "sandbox",
+  "roles": []
+}
+```
+
+`sample-journey` is actor `11111111-1111-4111-8111-111111111111`. `denied-actor` is actor `22222222-2222-4222-8222-222222222222`.
+
+`firefly.security-center.identity.adapter` selects `sandbox` (default), `keycloak`, `cognito`, or `internal-db`. Keycloak is Jafly artifact `org.fireflyframework:fireflyframework-security-idp-keycloak`, type `org.fireflyframework.security.idp.adapter.impl.IdpAdapterImpl`, bean `idpAdapter`. Replace the `IdentityPort` bean to supply another provider.
+
+## Access decisions
+
+`POST /api/v1/access/checks` is the AccessPort contract. The controller calls the port and does not decide allow or deny itself. Both outcomes return HTTP 200. A missing field returns HTTP 400.
+
+### Request
+
+```json
+{
+  "actorId": "11111111-1111-4111-8111-111111111111",
+  "action": "READ",
+  "resourceType": "ACCOUNT",
+  "resourceId": "10000000-0000-4000-8000-000000000002"
+}
+```
+
+| Field | Required | Values |
+| --- | --- | --- |
+| `actorId` | yes | Actor identifier. Comparison ignores case and surrounding spaces. |
+| `action` | yes | `READ`, `CREATE`, `UPDATE`, `CLOSE`, `DECIDE` |
+| `resourceType` | yes | `PARTY`, `ACCOUNT`, `CARD`, `APPLICATION`, `POLICY`, `CLAIM`, `CONTRACT`, `PRODUCT` |
+| `resourceId` | yes | Resource identifier. Comparison ignores case and surrounding spaces. |
+
+### Response
+
+Allowed:
+
+```json
+{
+  "allowed": true,
+  "reasonCode": "SANDBOX_GRANT"
+}
+```
+
+Denied:
+
+```json
+{
+  "allowed": false,
+  "reasonCode": "ACTOR_NOT_ENTITLED"
+}
+```
+
+| Field | Values |
+| --- | --- |
+| `allowed` | `true` when the actor may perform the action. `false` when the actor is denied. |
+| `reasonCode` | `SANDBOX_GRANT`, `ACTOR_NOT_ENTITLED`, `ACTOR_UNKNOWN`, `ACTION_NOT_GRANTED`, `RESOURCE_NOT_GRANTED`, `REQUEST_INCOMPLETE`. The session-grant adapter can also return `SESSION_GRANT` or `SESSION_UNAVAILABLE`. |
+
+### Sandbox policy
+
+The shipped adapter reads a policy file and does not call an identity provider.
+
+**File an installer replaces:** `domain-core-security-center-core/src/main/resources/access/sandbox-access-policy.json`
+
+`firefly.security-center.access.sandbox-policy` defaults to `classpath:access/sandbox-access-policy.json`. Point it at a `file:` location to use a copy outside the archive. Restart after the replacement.
+
+The sample actor `11111111-1111-4111-8111-111111111111` may `READ` and `CREATE` these resources. The second actor `22222222-2222-4222-8222-222222222222` is denied.
+
+| Resource type | Sample resource id |
+| --- | --- |
+| `PARTY` | `10000000-0000-4000-8000-000000000001` |
+| `ACCOUNT` | `10000000-0000-4000-8000-000000000002` |
+| `CARD` | `10000000-0000-4000-8000-000000000003` |
+| `APPLICATION` | `10000000-0000-4000-8000-000000000004` |
+| `POLICY` | `10000000-0000-4000-8000-000000000005` |
+| `CLAIM` | `10000000-0000-4000-8000-000000000006` |
+| `CONTRACT` | `10000000-0000-4000-8000-000000000007` |
+| `PRODUCT` | `10000000-0000-4000-8000-000000000008` |
+
+`UPDATE`, `CLOSE`, and `DECIDE` are not granted to the sample actor. In a replacement file, `resourceId` of `*` covers every identifier of that type.
+
+Set `firefly.security-center.access.adapter` to `session-grants` to evaluate role scopes on the party session instead of the file. A later `AccessPort` adapter can call an entitlement store.
+
 ## Authentication Endpoints
 
 ### 1. Login

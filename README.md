@@ -1,9 +1,9 @@
 <a href="https://fireflysoftware.io/openplatform/">
 <picture>
-  <source media="(max-width: 640px) and (prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/firefly-oss/.github/main/profile/assets/banner-narrow-dark.svg">
-  <source media="(max-width: 640px)" srcset="https://raw.githubusercontent.com/firefly-oss/.github/main/profile/assets/banner-narrow-light.svg">
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/firefly-oss/.github/main/profile/assets/banner-dark.svg">
-  <img src="https://raw.githubusercontent.com/firefly-oss/.github/main/profile/assets/banner-light.svg" alt="Firefly OpenPlatform - Domain Core - Security Center" width="100%">
+  <source media="(max-width: 640px) and (prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/fireflysoftwaresolutions/.github/main/profile/assets/banner-narrow-dark.svg">
+  <source media="(max-width: 640px)" srcset="https://raw.githubusercontent.com/fireflysoftwaresolutions/.github/main/profile/assets/banner-narrow-light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/fireflysoftwaresolutions/.github/main/profile/assets/banner-dark.svg">
+  <img src="https://raw.githubusercontent.com/fireflysoftwaresolutions/.github/main/profile/assets/banner-light.svg" alt="Firefly OpenPlatform - Domain Core - Security Center" width="100%">
 </picture>
 </a>
 
@@ -54,6 +54,7 @@ The Security Center acts as the **single source of truth** for user sessions acr
 - **High Performance** - Caffeine-backed caching with optional Redis support
 - **Reactive Architecture** - Non-blocking, built on Spring WebFlux and Project Reactor with Java 25 Virtual Threads
 - **Exportable Library** - Other services import `FireflySessionManager` for session access
+- **Access decisions** - Experience journeys ask whether an actor may use a resource. The answer is allowed or denied, with a reason code
 - **Production Ready** - Comprehensive test coverage with Testcontainers
 
 ### Who Uses It
@@ -456,7 +457,7 @@ Before you begin, ensure you have:
 
 ```bash
 # Clone the repository
-git clone https://github.com/firefly-oss/domain-core-security-center.git
+git clone https://github.com/fireflysoftwaresolutions/domain-core-security-center.git
 cd domain-core-security-center
 
 # Build the project (runs all tests)
@@ -834,7 +835,176 @@ server:
 - Switch to Caffeine cache for local development
 - Set `firefly.cache.default-cache-type: CAFFEINE`
 
+## Identity
+
+Experience code calls IdentityPort to learn who the actor is. It does not import Keycloak, Cognito, or any other identity-provider client. The security center delegates to Jafly when a deployment selects one of those providers.
+
+`POST /api/v1/identity/subjects`
+
+Authenticate with a username, or resolve an actor id that is already known. A known subject returns HTTP 200. An unknown subject returns HTTP 404. A body with neither field returns HTTP 400. The sandbox adapter ignores `password`.
+
+### Request
+
+```json
+{
+  "username": "sample-journey"
+}
+```
+
+Resolve an existing actor:
+
+```json
+{
+  "actorId": "11111111-1111-4111-8111-111111111111"
+}
+```
+
+| Field | Required | Values |
+| --- | --- | --- |
+| `username` | one of username or actorId | Sandbox usernames are `sample-journey` and `denied-actor`. |
+| `actorId` | one of username or actorId | Subject identifier returned by a previous call. |
+| `password` | no | Passed only to the selected Jafly adapter. The sandbox adapter does not read it. Do not commit a password. |
+
+### Response
+
+```json
+{
+  "actorId": "11111111-1111-4111-8111-111111111111",
+  "provider": "sandbox",
+  "roles": []
+}
+```
+
+| Field | Values |
+| --- | --- |
+| `actorId` | Subject identifier. AccessPort evaluates this id. |
+| `provider` | `sandbox`, `keycloak`, `cognito`, or `internal-db`. |
+| `roles` | Realm role names from the identity provider. Empty for the sandbox subjects. |
+
+`sample-journey` resolves to actor `11111111-1111-4111-8111-111111111111`. `denied-actor` resolves to actor `22222222-2222-4222-8222-222222222222`. Any other username is unknown. No identity-provider process is required.
+
+### Selecting the adapter
+
+Set one property. The sample file sets the Jafly property from the same placeholder.
+
+```yaml
+firefly:
+  security:
+    idp:
+      provider: ${FIREFLY_IDENTITY_ADAPTER:sandbox}
+  security-center:
+    identity:
+      adapter: ${FIREFLY_IDENTITY_ADAPTER:sandbox}
+```
+
+| `firefly.security-center.identity.adapter` | What is registered |
+| --- | --- |
+| `sandbox` (default) | Spring bean `sandboxIdentityPort`, class `SandboxIdentityAdapter`. No identity-provider process. |
+| `keycloak` | Spring bean `jaflyIdentityPort`, class `JaflyIdentityAdapter`, delegating to Jafly bean `idpAdapter`. |
+| `cognito` | The same `jaflyIdentityPort` bean, delegating to Jafly's Cognito adapter. |
+| `internal-db` | The same `jaflyIdentityPort` bean, delegating to Jafly's internal database adapter. |
+
+Jafly artifacts, version `26.10.20` from `org.fireflyframework:fireflyframework-bom`. This service does not fork Keycloak and does not ship a second Keycloak client.
+
+| Adapter | Maven artifact | Jafly type |
+| --- | --- | --- |
+| Contract | `org.fireflyframework:fireflyframework-security-idp` | `org.fireflyframework.security.idp.adapter.IdpAdapter` |
+| Keycloak, the reference | `org.fireflyframework:fireflyframework-security-idp-keycloak` | `org.fireflyframework.security.idp.adapter.impl.IdpAdapterImpl`, bean `idpAdapter` |
+| Cognito | `org.fireflyframework:fireflyframework-security-idp-aws-cognito` | `org.fireflyframework.security.idp.cognito.adapter.CognitoIdpAdapter` |
+| Internal database | `org.fireflyframework:fireflyframework-security-idp-internal-db` | `org.fireflyframework.security.idp.internaldb.adapter.InternalDbIdpAdapter` |
+
+Jafly activates its adapter when `firefly.security.idp.provider` is `keycloak`, `cognito`, or `internal-db`. `IdentityAdapterEnvironmentPostProcessor` copies `firefly.security-center.identity.adapter` onto that property for those three values. `sandbox` does not.
+
+An installer selects the provider with `firefly.security-center.identity.adapter`. To replace the adapter itself, register another Spring bean of type `io.fireflysoftware.security.center.session.IdentityPort`. Keycloak server URL, realm, and client id are `${KEYCLOAK_URL}`, `${KEYCLOAK_REALM}`, `${KEYCLOAK_CLIENT_ID}`, and `${KEYCLOAK_CLIENT_SECRET}`. Leave the secret in the environment. Do not commit it.
+
+## Access decisions
+
+Experience journeys call this check before they read or change a customer, account, card, application, policy, claim, contract, or product. The HTTP API is the AccessPort contract. The controller calls the port and does not decide allow or deny itself. The port resolves the actor through IdentityPort and evaluates that subject. It does not accept a Keycloak role as a separate caller concern. Realm roles returned on the subject can satisfy a `roles` grant in the policy file.
+
+`POST /api/v1/access/checks`
+
+Both outcomes return HTTP 200. A denied decision is still a successful answer, and the caller does not continue to the domain. A body that omits a required field returns HTTP 400.
+
+### Request
+
+```json
+{
+  "actorId": "11111111-1111-4111-8111-111111111111",
+  "action": "READ",
+  "resourceType": "ACCOUNT",
+  "resourceId": "10000000-0000-4000-8000-000000000002"
+}
+```
+
+| Field | Required | Values |
+| --- | --- | --- |
+| `actorId` | yes | Actor identifier. Comparison ignores case and surrounding spaces. |
+| `action` | yes | `READ`, `CREATE`, `UPDATE`, `CLOSE`, `DECIDE` |
+| `resourceType` | yes | `PARTY`, `ACCOUNT`, `CARD`, `APPLICATION`, `POLICY`, `CLAIM`, `CONTRACT`, `PRODUCT` |
+| `resourceId` | yes | Resource identifier. Comparison ignores case and surrounding spaces. |
+
+### Response
+
+```json
+{
+  "allowed": true,
+  "reasonCode": "SANDBOX_GRANT"
+}
+```
+
+| Field | Values |
+| --- | --- |
+| `allowed` | `true` when the actor may perform the action. `false` when the actor is denied. |
+| `reasonCode` | Why. Sandbox codes are `SANDBOX_GRANT`, `ACTOR_NOT_ENTITLED`, `ACTOR_UNKNOWN`, `ACTION_NOT_GRANTED`, `RESOURCE_NOT_GRANTED`, and `REQUEST_INCOMPLETE`. A realm role match returns `REALM_ROLE_GRANT`. |
+
+A denied example:
+
+```json
+{
+  "allowed": false,
+  "reasonCode": "ACTOR_NOT_ENTITLED"
+}
+```
+
+The session-grant adapter, used only when `firefly.security-center.access.adapter` is `session-grants`, can also return `SESSION_GRANT` or `SESSION_UNAVAILABLE`. That adapter reads role scopes already stored on the party session. It does not call an identity provider.
+
+### Sandbox policy
+
+The shipped adapter is `SandboxPolicyAccessAdapter`. It reads a policy file and does not call an identity provider. Allow and deny are not written into the controller. Replacing the file changes the decision. Restart after a replacement.
+
+**File an installer replaces:** `domain-core-security-center-core/src/main/resources/access/sandbox-access-policy.json`
+
+The process reads `firefly.security-center.access.sandbox-policy`, which defaults to `classpath:access/sandbox-access-policy.json`. Point that property at a `file:` location to use a copy outside the archive. The same document shape applies.
+
+The shipped file allows the sample actor to `READ` and `CREATE` the sample resources below, and denies the second actor for every action. `UPDATE`, `CLOSE`, and `DECIDE` are not granted to the sample actor. A `resourceId` of `*` in a replacement file covers every identifier of that type.
+
+| Role | Actor id |
+| --- | --- |
+| Sample journey actor | `11111111-1111-4111-8111-111111111111` |
+| Denied actor | `22222222-2222-4222-8222-222222222222` |
+
+| Resource type | Sample resource id |
+| --- | --- |
+| `PARTY` | `10000000-0000-4000-8000-000000000001` |
+| `ACCOUNT` | `10000000-0000-4000-8000-000000000002` |
+| `CARD` | `10000000-0000-4000-8000-000000000003` |
+| `APPLICATION` | `10000000-0000-4000-8000-000000000004` |
+| `POLICY` | `10000000-0000-4000-8000-000000000005` |
+| `CLAIM` | `10000000-0000-4000-8000-000000000006` |
+| `CONTRACT` | `10000000-0000-4000-8000-000000000007` |
+| `PRODUCT` | `10000000-0000-4000-8000-000000000008` |
+
+A later adapter can implement `AccessPort` and replace this one when a deployment uses an entitlement store. Set `firefly.security-center.access.adapter` to `session-grants` to evaluate the role scopes on the party session instead of the file. A scope may name `resourceId`. When `resourceId` is absent, or `*`, the scope covers every resource of that type.
+
 ## API Endpoints
+
+### Identity
+
+- `POST /api/v1/identity/subjects` - Authenticate or resolve the subject
+
+### Access
+
+- `POST /api/v1/access/checks` - Decide whether that subject may access a resource
 
 ### Authentication
 
@@ -954,10 +1124,17 @@ public class AccountController {
 
 ```
 ├── Core Module:
+│   ├── SandboxPolicyAccessAdapterTest: 28 tests
+│   ├── SubjectBoundAccessAdapterTest: 2 tests
+│   ├── SessionGrantAccessAdapterTest: 9 tests
+│   ├── SandboxIdentityAdapterTest: 4 tests
+│   ├── JaflyIdentityAdapterTest: 2 tests
 │   ├── ContractResolverServiceTest: 8 tests
 │   └── CustomerResolverServiceTest: 9 tests
 │
 └── Web Module:
+    ├── IdentityControllerTest: 3 tests
+    ├── AccessControllerTest: 3 tests
     ├── AuthenticationControllerIntegrationTest: 4 tests
     ├── KeycloakIntegrationTest:  7 tests (@Disabled - requires Docker)
     ├── RedisCacheIntegrationTest: 9 tests (@Disabled - requires Docker)

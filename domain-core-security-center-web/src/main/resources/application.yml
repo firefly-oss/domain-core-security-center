@@ -40,9 +40,15 @@ springdoc:
   paths-to-match: /api/**
 
 firefly:
+  # Jafly reads firefly.security.idp.provider. IdentityAdapterEnvironmentPostProcessor
+  # copies firefly.security-center.identity.adapter onto that property when it is
+  # keycloak, cognito, or internal-db. sandbox starts no identity-provider process.
+  security:
+    idp:
+      provider: ${FIREFLY_IDENTITY_ADAPTER:sandbox}
   # Framework-level IDP properties (required by fireflyframework-idp-aws-cognito auto-configuration)
   idp:
-    provider: cognito
+    provider: ${FIREFLY_IDENTITY_ADAPTER:sandbox}
     cognito:
       region: ${AWS_REGION}
       user-pool-id: ${COGNITO_USER_POOL_ID}
@@ -75,17 +81,22 @@ firefly:
       password: ${REDIS_PASSWORD:}
 
   security-center:
-    # IDP Configuration
+    # sandbox | keycloak | cognito | internal-db
+    # keycloak uses org.fireflyframework:fireflyframework-security-idp-keycloak
+    identity:
+      adapter: ${FIREFLY_IDENTITY_ADAPTER:sandbox}
+
+    # IDP Configuration. Kept aligned with identity.adapter.
     idp:
-      provider: cognito
+      provider: ${FIREFLY_IDENTITY_ADAPTER:sandbox}
 
       keycloak:
         server-url: ${KEYCLOAK_URL:http://localhost:8080}
         realm: ${KEYCLOAK_REALM:firefly}
-        client-id: ${KEYCLOAK_CLIENT_ID:security-center}
-        client-secret: ${KEYCLOAK_CLIENT_SECRET}
-        admin-username: ${KEYCLOAK_ADMIN_USERNAME:admin}
-        admin-password: ${KEYCLOAK_ADMIN_PASSWORD:admin}
+        client-id: ${KEYCLOAK_CLIENT_ID:}
+        client-secret: ${KEYCLOAK_CLIENT_SECRET:}
+        admin-username: ${KEYCLOAK_ADMIN_USERNAME:}
+        admin-password: ${KEYCLOAK_ADMIN_PASSWORD:}
 
       cognito:
         region: ${AWS_REGION}
@@ -97,6 +108,12 @@ firefly:
     session:
       timeout-minutes: 30
       cleanup-interval-minutes: 15
+
+    # Access decisions do not call an identity provider.
+    # sandbox reads the policy file. session-grants evaluates role scopes on the party session.
+    access:
+      adapter: sandbox
+      sandbox-policy: classpath:access/sandbox-access-policy.json
 
     # Downstream microservice SDK clients
     clients:

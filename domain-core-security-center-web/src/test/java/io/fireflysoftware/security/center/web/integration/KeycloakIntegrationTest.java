@@ -145,7 +145,7 @@ class KeycloakIntegrationTest extends AbstractSecurityCenterIntegrationTest {
         // Mock Natural Person
         io.fireflysoftware.core.customer.sdk.model.NaturalPersonDTO mockPerson = new io.fireflysoftware.core.customer.sdk.model.NaturalPersonDTO();
         mockPerson.setGivenName("Test");
-        mockPerson.setFamilyName1("User");
+        mockPerson.setFamilyName("User");
         when(naturalPersonsApi.getNaturalPersonByPartyId(any(UUID.class), any()))
                 .thenReturn(Mono.just(mockPerson));
 

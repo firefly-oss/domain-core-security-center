@@ -23,6 +23,7 @@ domain-core-security-center/
 - No dependencies on other modules
 
 **Key Classes:**
+- `AccessRequest` and `AccessDecision` - AccessPort request and response
 - `SessionContextDTO` - Complete session information
 - `ContractInfoDTO` - Contract and role details
 - `CustomerInfoDTO` - Customer/party information
@@ -33,6 +34,8 @@ domain-core-security-center/
 
 #### 2. Session Module **Exportable**
 - `FireflySessionManager` interface
+- `IdentityPort` interface, who the actor is
+- `AccessPort` interface, whether that subject may use a resource
 - Imported by other microservices
 - Minimal dependencies
 
@@ -59,6 +62,9 @@ domain-core-security-center/
 - `DefaultUserMappingService` - IDP user to party ID mapping
 - `UserService` - User creation via IDP
 - `IdpAutoConfiguration` - IDP provider selection
+- `SandboxPolicyAccessAdapter` - Access decisions from the sandbox policy file
+- `SessionGrantAccessAdapter` - Access decisions from role scopes on the party session
+- `AccessPortConfiguration` - Selects the access adapter
 
 #### 4. Web Module
 - REST API with Spring WebFlux
@@ -83,6 +89,12 @@ domain-core-security-center/
 - `GET /api/v1/sessions/{sessionId}/validate` - Validate session
 - `GET /api/v1/sessions/access-check` - Check product access
 - `GET /api/v1/sessions/permission-check` - Check permission
+
+**Endpoints (IdentityController):**
+- `POST /api/v1/identity/subjects` - Authenticate or resolve the subject
+
+**Endpoints (AccessController):**
+- `POST /api/v1/access/checks` - Decide whether that subject may access a resource
 
 **Endpoints (UserController):**
 - `POST /api/v1/users` - Create user in IDP
@@ -432,6 +444,9 @@ public Mono<SessionContextDTO> aggregateSessionContext(UUID partyId) {
 - Fine-grained permissions via role scopes
 - Contract-based access control
 - Resource and action-level permissions
+- AccessPort decides actor, action, resource type, and resource id
+- The shipped adapter reads `domain-core-security-center-core/src/main/resources/access/sandbox-access-policy.json`
+- The controller does not allow or deny on its own, and the check does not call an identity provider
 
 ## Scalability
 

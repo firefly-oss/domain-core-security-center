@@ -85,6 +85,7 @@ import java.util.UUID;
  * @author Firefly Team
  * @since 1.0.0
  * @see SessionContextDTO
+ * @see AccessPort
  */
 public interface FireflySessionManager {
 

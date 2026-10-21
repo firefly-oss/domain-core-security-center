@@ -31,6 +31,47 @@ firefly:
         client-id: your-client-id
 ```
 
+## Identity adapter
+
+One property selects sandbox, Keycloak, Cognito, or the internal database. The default is sandbox, which starts no identity-provider process.
+
+```yaml
+firefly:
+  security:
+    idp:
+      provider: ${FIREFLY_IDENTITY_ADAPTER:sandbox}
+  security-center:
+    identity:
+      adapter: ${FIREFLY_IDENTITY_ADAPTER:sandbox}
+```
+
+| Value | Bean | Jafly artifact |
+| --- | --- | --- |
+| `sandbox` | `sandboxIdentityPort` | none |
+| `keycloak` | `jaflyIdentityPort` delegating to `idpAdapter` | `org.fireflyframework:fireflyframework-security-idp-keycloak` |
+| `cognito` | `jaflyIdentityPort` | `org.fireflyframework:fireflyframework-security-idp-aws-cognito` |
+| `internal-db` | `jaflyIdentityPort` | `org.fireflyframework:fireflyframework-security-idp-internal-db` |
+
+The Keycloak reference type is `org.fireflyframework.security.idp.adapter.impl.IdpAdapterImpl`. Replace the `IdentityPort` bean to supply another provider. Do not commit client secrets. Use `${KEYCLOAK_CLIENT_SECRET}` and the matching placeholders for Cognito.
+
+## Access policy
+
+Access checks do not call an identity provider. The default adapter reads a policy file.
+
+**File an installer replaces:** `domain-core-security-center-core/src/main/resources/access/sandbox-access-policy.json`
+
+```yaml
+firefly:
+  security-center:
+    access:
+      adapter: sandbox
+      sandbox-policy: classpath:access/sandbox-access-policy.json
+```
+
+`adapter` is `sandbox` or `session-grants`. `sandbox-policy` may be a `classpath:` location or a `file:` location. Restart after replacing the file.
+
+The shipped file lets actor `11111111-1111-4111-8111-111111111111` read and create the sample resources, and denies actor `22222222-2222-4222-8222-222222222222`. The request and response are documented in the README under Access decisions.
+
 ## Identity Provider Configuration
 
 ### Keycloak

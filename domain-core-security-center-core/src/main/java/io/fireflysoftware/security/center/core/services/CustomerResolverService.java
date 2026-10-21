@@ -144,13 +144,13 @@ public class CustomerResolverService {
             if (!name.isEmpty()) name.append(" ");
             name.append(person.getMiddleName());
         }
-        if (person.getFamilyName1() != null) {
+        if (person.getFamilyName() != null) {
             if (!name.isEmpty()) name.append(" ");
-            name.append(person.getFamilyName1());
+            name.append(person.getFamilyName());
         }
-        if (person.getFamilyName2() != null && !person.getFamilyName2().isEmpty()) {
+        if (person.getSecondFamilyName() != null && !person.getSecondFamilyName().isEmpty()) {
             if (!name.isEmpty()) name.append(" ");
-            name.append(person.getFamilyName2());
+            name.append(person.getSecondFamilyName());
         }
         return !name.isEmpty() ? name.toString() : "Unknown Person";
     }

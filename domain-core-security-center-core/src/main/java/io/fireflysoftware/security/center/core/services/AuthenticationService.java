@@ -18,9 +18,11 @@ package io.fireflysoftware.security.center.core.services;
 
 import org.fireflyframework.security.idp.adapter.IdpAdapter;
 import org.fireflyframework.security.idp.dtos.*;
+import io.fireflysoftware.security.center.interfaces.identity.IdentityRequest;
 import io.fireflysoftware.security.center.session.FireflySessionManager;
-import lombok.RequiredArgsConstructor;
+import io.fireflysoftware.security.center.session.IdentityPort;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -49,15 +51,24 @@ import java.util.UUID;
  * </pre>
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class AuthenticationService {
 
-    private final IdpAdapter idpAdapter;
+    private final IdentityPort identityPort;
     private final FireflySessionManager sessionManager;
-    
+    private final IdpAdapter idpAdapter;
+
     @Autowired(required = false)
     private UserMappingService userMappingService;
+
+    public AuthenticationService(
+            IdentityPort identityPort,
+            FireflySessionManager sessionManager,
+            ObjectProvider<IdpAdapter> idpAdapters) {
+        this.identityPort = identityPort;
+        this.sessionManager = sessionManager;
+        this.idpAdapter = idpAdapters.getIfAvailable();
+    }
 
     /**
      * Authenticate user via IDP and create Firefly session
@@ -67,6 +78,19 @@ public class AuthenticationService {
      */
     public Mono<AuthenticationResponse> login(LoginRequest request) {
         log.info("Authenticating user: {}", request.getUsername());
+
+        if (idpAdapter == null) {
+            return identityPort.authenticate(IdentityRequest.builder()
+                            .username(request.getUsername())
+                            .password(request.getPassword())
+                            .build())
+                    .switchIfEmpty(Mono.error(new AuthenticationException("Subject was not recognized")))
+                    .map(subject -> AuthenticationResponse.builder()
+                            .partyId(UUID.fromString(subject.getActorId()))
+                            .tokenType("Bearer")
+                            .expiresIn(3600L)
+                            .build());
+        }
 
         return idpAdapter.login(request)
                 .flatMap(tokenResponse -> {
@@ -116,11 +140,12 @@ public class AuthenticationService {
     public Mono<Void> logout(AuthLogoutRequest logoutRequest) {
         log.info("Logging out session: {}", logoutRequest.getSessionId());
 
-        // Invalidate IDP session
-        Mono<Void> idpLogout = idpAdapter.logout(LogoutRequest.builder()
-                .accessToken(logoutRequest.getAccessToken())
-                .refreshToken(logoutRequest.getRefreshToken())
-                .build());
+        Mono<Void> idpLogout = idpAdapter == null
+                ? Mono.empty()
+                : idpAdapter.logout(LogoutRequest.builder()
+                        .accessToken(logoutRequest.getAccessToken())
+                        .refreshToken(logoutRequest.getRefreshToken())
+                        .build());
 
         // Invalidate Firefly session
         Mono<Void> fireflyLogout = sessionManager.invalidateSession(logoutRequest.getSessionId());
@@ -138,6 +163,9 @@ public class AuthenticationService {
      */
     public Mono<AuthenticationResponse> refresh(RefreshRequest request) {
         log.debug("Refreshing tokens");
+        if (idpAdapter == null) {
+            return Mono.error(new AuthenticationException("Token refresh requires an identity provider"));
+        }
 
         return idpAdapter.refresh(request)
                 .flatMap(tokenResponse -> {
@@ -176,6 +204,9 @@ public class AuthenticationService {
      * Introspect IDP token
      */
     public Mono<ResponseEntity<IntrospectionResponse>> introspect(String accessToken) {
+        if (idpAdapter == null) {
+            return Mono.error(new AuthenticationException("Token introspection requires an identity provider"));
+        }
         return idpAdapter.introspect(accessToken);
     }
 
@@ -187,6 +218,9 @@ public class AuthenticationService {
      */
     public Mono<Void> resetPassword(String userName) {
         log.info("Reset password request for user: {}", userName);
+        if (idpAdapter == null) {
+            return Mono.error(new AuthenticationException("Password reset requires an identity provider"));
+        }
         return idpAdapter.resetPassword(userName)
                 .doOnSuccess(v -> log.info("Reset password completed for user: {}", userName))
                 .doOnError(err -> log.error("Reset password failed for {}", userName, err));

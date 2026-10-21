@@ -19,6 +19,7 @@ package io.fireflysoftware.security.center.core.config;
 import org.fireflyframework.security.idp.adapter.IdpAdapter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -104,6 +105,7 @@ public class IdpAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(IdpAdapter.class)
+    @ConditionalOnExpression("'${firefly.security-center.identity.adapter:sandbox}' != 'sandbox'")
     public IdpAdapter fallbackIdpAdapter() {
         log.error("No IdpAdapter bean found. " +
                 "Please ensure the corresponding IDP implementation library is on the classpath " +

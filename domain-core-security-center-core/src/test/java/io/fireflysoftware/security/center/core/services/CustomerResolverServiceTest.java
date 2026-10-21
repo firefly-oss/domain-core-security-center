@@ -140,7 +140,7 @@ class CustomerResolverServiceTest {
         NaturalPersonDTO naturalPerson = new NaturalPersonDTO();
         naturalPerson.setPartyId(testPartyId);
         naturalPerson.setGivenName("Jane");
-        naturalPerson.setFamilyName1("Doe");
+        naturalPerson.setFamilyName("Doe");
         // No middle name or familyName2
 
         when(partiesApi.getPartyById(eq(testPartyId), any())).thenReturn(Mono.just(party));
@@ -308,8 +308,8 @@ class CustomerResolverServiceTest {
         dto.setPartyId(testPartyId);
         dto.setGivenName("John");
         dto.setMiddleName("Michael");
-        dto.setFamilyName1("Doe");
-        dto.setFamilyName2("Smith");
+        dto.setFamilyName("Doe");
+        dto.setSecondFamilyName("Smith");
         dto.setDateOfBirth(LocalDate.of(1990, 1, 1));
         return dto;
     }

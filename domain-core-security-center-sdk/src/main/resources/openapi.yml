@@ -388,6 +388,86 @@ paths:
             '*/*':
               schema:
                 type: boolean
+  /api/v1/identity/subjects:
+    post:
+      tags:
+      - identity-controller
+      operationId: resolveSubject
+      summary: Authenticate or resolve the actor
+      description: "IdentityPort. Returns the subject AccessPort evaluates. Does not\
+        \ call an identity provider from the caller. Sandbox usernames are sample-journey\
+        \ and denied-actor."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdentityRequest"
+            example:
+              username: sample-journey
+      responses:
+        "200":
+          description: The subject.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subject"
+              example:
+                actorId: 11111111-1111-4111-8111-111111111111
+                provider: sandbox
+                roles: []
+        "400":
+          description: Neither username nor actorId was provided.
+        "404":
+          description: The subject is unknown.
+  /api/v1/access/checks:
+    post:
+      tags:
+      - access-controller
+      operationId: decideAccess
+      summary: Decide whether an actor may access a resource
+      description: "AccessPort check. Returns HTTP 200 for both allowed and denied\
+        \ outcomes. The body carries allowed and reasonCode. The controller calls\
+        \ AccessPort and does not decide allow or deny itself."
+      parameters:
+      - name: X-Idempotency-Key
+        in: header
+        description: "Unique key for idempotent requests. If provided, ensures that\
+          \ identical requests with the same key will only be processed once."
+        required: false
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccessRequest"
+            example:
+              actorId: 11111111-1111-4111-8111-111111111111
+              action: READ
+              resourceType: ACCOUNT
+              resourceId: 10000000-0000-4000-8000-000000000002
+      responses:
+        "200":
+          description: Access decision. allowed is true or false, with a reasonCode.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessDecision"
+              examples:
+                granted:
+                  summary: Sample actor may read the sample account
+                  value:
+                    allowed: true
+                    reasonCode: SANDBOX_GRANT
+                denied:
+                  summary: Second actor is denied
+                  value:
+                    allowed: false
+                    reasonCode: ACTOR_NOT_ENTITLED
+        "400":
+          description: The request is missing actorId, action, resourceType, or resourceId.
 components:
   schemas:
     CreateUserRequest:
@@ -568,6 +648,9 @@ components:
           type: string
         isActive:
           type: boolean
+        resourceId:
+          type: string
+          description: Optional resource identifier. Absent or * covers every resource of resourceType.
     SessionContextDTO:
       type: object
       properties:
@@ -692,3 +775,85 @@ components:
           - SUPER_AGENT
           - DISTRIBUTOR
           - ADMIN
+    AccessRequest:
+      type: object
+      required:
+      - actorId
+      - action
+      - resourceType
+      - resourceId
+      properties:
+        actorId:
+          type: string
+          description: Identifier of the actor. Compared without regard to case or surrounding spaces.
+        action:
+          type: string
+          enum:
+          - READ
+          - CREATE
+          - UPDATE
+          - CLOSE
+          - DECIDE
+        resourceType:
+          type: string
+          enum:
+          - PARTY
+          - ACCOUNT
+          - CARD
+          - APPLICATION
+          - POLICY
+          - CLAIM
+          - CONTRACT
+          - PRODUCT
+        resourceId:
+          type: string
+          description: Identifier of the resource. Compared without regard to case or surrounding spaces.
+    AccessDecision:
+      type: object
+      required:
+      - allowed
+      - reasonCode
+      properties:
+        allowed:
+          type: boolean
+          description: True when the actor may perform the action. False when the actor is denied.
+        reasonCode:
+          type: string
+          description: "Why the decision was allowed or denied. Sandbox codes: SANDBOX_GRANT,\
+            \ ACTOR_NOT_ENTITLED, ACTOR_UNKNOWN, ACTION_NOT_GRANTED, RESOURCE_NOT_GRANTED,\
+            \ REQUEST_INCOMPLETE. Session-grant codes also include SESSION_GRANT and\
+            \ SESSION_UNAVAILABLE."
+          example: SANDBOX_GRANT
+    IdentityRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          description: Username to authenticate. Sandbox values are sample-journey and denied-actor.
+        actorId:
+          type: string
+          description: Actor id to resolve when username is omitted.
+        password:
+          type: string
+          description: Passed only to the selected Jafly adapter. The sandbox adapter ignores it.
+    Subject:
+      type: object
+      required:
+      - actorId
+      - provider
+      - roles
+      properties:
+        actorId:
+          type: string
+        provider:
+          type: string
+          enum:
+          - sandbox
+          - keycloak
+          - cognito
+          - internal-db
+        roles:
+          type: array
+          items:
+            type: string
+          description: Realm roles from the identity provider. Empty for sandbox subjects.

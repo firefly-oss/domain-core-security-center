@@ -60,6 +60,13 @@ public class RoleScopeInfoDTO {
     @JsonProperty("resourceType")
     private String resourceType;
 
+    /**
+     * Optional resource identifier. When absent, the scope covers every resource of
+     * {@code resourceType}. A value of {@code *} covers every resource of that type.
+     */
+    @JsonProperty("resourceId")
+    private String resourceId;
+
     @JsonProperty("isActive")
     private Boolean isActive;
 }

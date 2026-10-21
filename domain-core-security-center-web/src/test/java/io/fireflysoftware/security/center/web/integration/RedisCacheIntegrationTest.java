@@ -184,7 +184,7 @@ class RedisCacheIntegrationTest extends AbstractSecurityCenterIntegrationTest {
         NaturalPersonDTO mockPerson = new NaturalPersonDTO();
         mockPerson.setPartyId(testPartyId);
         mockPerson.setGivenName("Test");
-        mockPerson.setFamilyName1("User");
+        mockPerson.setFamilyName("User");
         when(naturalPersonsApi.getNaturalPersonByPartyId(any(UUID.class), any()))
                 .thenReturn(Mono.just(mockPerson));
 
