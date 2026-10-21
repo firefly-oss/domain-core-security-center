@@ -20,7 +20,9 @@
         { "action": "READ", "resourceType": "CONTRACT", "resourceId": "10000000-0000-4000-8000-000000000007" },
         { "action": "CREATE", "resourceType": "CONTRACT", "resourceId": "10000000-0000-4000-8000-000000000007" },
         { "action": "READ", "resourceType": "PRODUCT", "resourceId": "10000000-0000-4000-8000-000000000008" },
-        { "action": "CREATE", "resourceType": "PRODUCT", "resourceId": "10000000-0000-4000-8000-000000000008" }
+        { "action": "CREATE", "resourceType": "PRODUCT", "resourceId": "10000000-0000-4000-8000-000000000008" },
+        { "action": "READ", "resourceType": "PAYMENT", "resourceId": "10000000-0000-4000-8000-0000000000a1" },
+        { "action": "CREATE", "resourceType": "PAYMENT", "resourceId": "10000000-0000-4000-8000-0000000000a1" }
       ]
     },
     {
@@ -35,6 +37,7 @@
         { "action": "READ", "resourceType": "CLAIM", "resourceId": "10000000-0000-4000-8000-000000000006" },
         { "action": "READ", "resourceType": "CONTRACT", "resourceId": "10000000-0000-4000-8000-000000000007" },
         { "action": "READ", "resourceType": "PRODUCT", "resourceId": "10000000-0000-4000-8000-000000000008" },
+        { "action": "READ", "resourceType": "PAYMENT", "resourceId": "10000000-0000-4000-8000-0000000000a1" },
         { "action": "ADMINISTER", "resourceType": "PARTY", "resourceId": "*" },
         { "action": "IMPERSONATE", "resourceType": "PARTY", "resourceId": "*" },
         { "action": "ADMINISTER", "resourceType": "ACCOUNT", "resourceId": "*" },
@@ -50,7 +53,9 @@
         { "action": "ADMINISTER", "resourceType": "CONTRACT", "resourceId": "*" },
         { "action": "IMPERSONATE", "resourceType": "CONTRACT", "resourceId": "*" },
         { "action": "ADMINISTER", "resourceType": "PRODUCT", "resourceId": "*" },
-        { "action": "IMPERSONATE", "resourceType": "PRODUCT", "resourceId": "*" }
+        { "action": "IMPERSONATE", "resourceType": "PRODUCT", "resourceId": "*" },
+        { "action": "ADMINISTER", "resourceType": "PAYMENT", "resourceId": "*" },
+        { "action": "IMPERSONATE", "resourceType": "PAYMENT", "resourceId": "*" }
       ]
     },
     {

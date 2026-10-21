@@ -20,8 +20,8 @@ package io.fireflysoftware.security.center.core.services;
 import org.fireflyframework.security.idp.adapter.IdpAdapter;
 import org.fireflyframework.security.idp.dtos.CreateUserRequest;
 import org.fireflyframework.security.idp.dtos.CreateUserResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -30,17 +30,25 @@ import reactor.core.publisher.Mono;
  * Service that delegates user creation to the configured {@link IdpAdapter} and preserves its HTTP status.
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class UserService {
 
     private final IdpAdapter idpAdapter;
 
+    public UserService(ObjectProvider<IdpAdapter> idpAdapters) {
+        this.idpAdapter = idpAdapters.getIfAvailable();
+    }
+
     /**
      * Create a new user in the underlying IDP.
      * Returns the ResponseEntity from the IDP as-is to preserve status codes (e.g., 500 on failure).
+     * Sandbox starts no identity provider, so this call fails closed until an adapter is configured.
      */
     public Mono<ResponseEntity<CreateUserResponse>> createUser(CreateUserRequest request) {
+        if (idpAdapter == null) {
+            return Mono.error(new IllegalStateException(
+                    "IDP adapter is not configured. sandbox does not start an identity provider."));
+        }
         log.info("Creating user via IDP");
         return idpAdapter.createUser(request)
                 .doOnNext(resp -> log.info("User create response status: {}", resp.getStatusCode()))

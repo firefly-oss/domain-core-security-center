@@ -48,7 +48,8 @@ class SandboxPolicyAccessAdapterTest {
             AccessResourceType.POLICY, "10000000-0000-4000-8000-000000000005",
             AccessResourceType.CLAIM, "10000000-0000-4000-8000-000000000006",
             AccessResourceType.CONTRACT, "10000000-0000-4000-8000-000000000007",
-            AccessResourceType.PRODUCT, "10000000-0000-4000-8000-000000000008");
+            AccessResourceType.PRODUCT, "10000000-0000-4000-8000-000000000008",
+            AccessResourceType.PAYMENT, "10000000-0000-4000-8000-0000000000a1");
 
     static SandboxPolicyAccessAdapter shipped;
 

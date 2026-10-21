@@ -27,5 +27,6 @@ public enum AccessResourceType {
     POLICY,
     CLAIM,
     CONTRACT,
-    PRODUCT
+    PRODUCT,
+    PAYMENT
 }
