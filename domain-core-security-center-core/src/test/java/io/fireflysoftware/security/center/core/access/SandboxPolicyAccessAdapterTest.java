@@ -79,13 +79,31 @@ class SandboxPolicyAccessAdapterTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = AccessAction.class, names = {"UPDATE", "CLOSE", "DECIDE", "ADMINISTER", "IMPERSONATE"})
+    @EnumSource(value = AccessAction.class, names = {"CLOSE", "DECIDE", "ADMINISTER", "IMPERSONATE"})
     void sampleActorMayNotStaffOrLifecycleActions(AccessAction action) {
         assertDecision(
                 shipped,
                 request(SAMPLE_ACTOR, action, AccessResourceType.ACCOUNT, SAMPLE_RESOURCES.get(AccessResourceType.ACCOUNT)),
                 false,
                 AccessDecision.ACTION_NOT_GRANTED);
+    }
+
+    @Test
+    void sampleActorMayUpdateAnApplication() {
+        assertDecision(
+                shipped,
+                request(SAMPLE_ACTOR, AccessAction.UPDATE, AccessResourceType.APPLICATION, "a7616543-a336-4af9-814e-6ccc1d182ce0"),
+                true,
+                AccessDecision.SANDBOX_GRANT);
+    }
+
+    @Test
+    void sampleActorMayNotUpdateAnAccount() {
+        assertDecision(
+                shipped,
+                request(SAMPLE_ACTOR, AccessAction.UPDATE, AccessResourceType.ACCOUNT, SAMPLE_RESOURCES.get(AccessResourceType.ACCOUNT)),
+                false,
+                AccessDecision.RESOURCE_NOT_GRANTED);
     }
 
     @Test
